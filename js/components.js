@@ -10,7 +10,7 @@ export async function includeComponent(url, selector) {
 
 export function loadHeaderAndFooter() {
   return Promise.all([
-    includeComponent("/components/header.html", "header.main-header"),
-    includeComponent("/components/footer.html", "footer"),
+    includeComponent("./components/header.html", "header"),
+    includeComponent("./components/footer.html", "footer"),
   ]);
 }
