@@ -11,7 +11,7 @@ export function setupDvdScreensaverScene(themeGroup) {
   themeGroup.add(sprite);
 
   loader.load(
-    "/images/dvd-logo.png",
+    "./images/dvd-logo.png",
     (tex) => {
       const { width: w, height: h } = tex.image;
       const targetH = 2;
