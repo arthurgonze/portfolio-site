@@ -1,0 +1,125 @@
+/*
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Arthur Gonze Machado
+*/
+.project-detail-main > .container {
+  background-color: rgba(20, 20, 20, 0.9);
+  padding: 30px;
+  border-radius: 8px;
+  margin-top: 100px;
+}
+
+.project-detail-main {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.project-detail-main h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  font-size: 2.8em;
+  color: #fff;
+}
+
+.project-meta {
+  text-align: center;
+  margin-bottom: 40px;
+  font-style: italic;
+  color: #aaa;
+  font-size: 0.95em;
+}
+
+.project-main-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 40px auto;
+  border-radius: 5px;
+  border: 1px solid #444;
+}
+
+.project-section {
+  margin-bottom: 40px;
+}
+
+.project-section h2 {
+  border-bottom: 2px solid #00aaff;
+  padding-bottom: 8px;
+  margin-bottom: 20px;
+  font-size: 1.8em;
+  color: #eee;
+}
+
+.project-section p,
+.project-section ul,
+.project-section ol {
+  line-height: 1.7;
+  margin-bottom: 15px;
+  color: #ccc;
+}
+
+.project-section ul,
+.project-section ol {
+  padding-left: 25px;
+}
+
+.project-section li {
+  margin-bottom: 10px;
+}
+
+.project-section pre {
+  background-color: #111;
+  padding: 15px;
+  border-radius: 5px;
+  border: 1px solid #333;
+  overflow-x: auto;
+  color: #eee;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 0.9em;
+}
+
+.project-section code {
+  font-family: "Courier New", Courier, monospace;
+  background-color: rgba(0, 0, 0, 0.2);
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.download-section {
+  text-align: center;
+  margin-top: 30px;
+  padding: 30px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+.download-section h2 {
+  border-bottom: none;
+  margin-bottom: 20px;
+}
+
+.download-button {
+  padding: 12px 30px;
+  font-size: 1.1em;
+}
+
+.download-section small {
+  display: block;
+  margin-top: 10px;
+  color: #aaa;
+}
+
+@media (max-width: 768px) {
+  .project-detail-main h1 {
+    font-size: 2.2em;
+  }
+
+  .project-section h2 {
+    font-size: 1.6em;
+  }
+
+  .project-detail-main {
+    padding: 20px;
+  }
+}

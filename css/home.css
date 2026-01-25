@@ -1,0 +1,90 @@
+/*
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Arthur Gonze Machado
+*/
+.welcome-panel {
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.6);
+  padding: 24px 32px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: calc(100% - 40px);
+  color: #eee;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+
+.welcome-panel h1 {
+  margin: 0 0 12px;
+  font-size: 2.8em;
+  line-height: 1.1;
+}
+
+.welcome-panel p {
+  margin: 0 0 16px;
+  font-size: 1.1em;
+  line-height: 1.6;
+}
+
+.welcome-panel .links {
+  margin-top: 8px;
+}
+
+.welcome-panel .links a {
+  color: #00aaff;
+  text-decoration: none;
+  font-weight: 600;
+  margin-right: 12px;
+}
+
+.welcome-panel .links a:hover {
+  text-decoration: underline;
+}
+
+.panel-toggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  font-size: 1.2em;
+  line-height: 1;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 6px rgba(255, 255, 255, 0.4);
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.panel-toggle:hover {
+  background: rgba(0, 0, 0, 1);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+.welcome-panel.collapsed {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 50%;
+  overflow: hidden;
+}
+
+.welcome-panel.collapsed h1,
+.welcome-panel.collapsed p,
+.welcome-panel.collapsed .links {
+  display: none;
+}
+
+.welcome-panel.collapsed .panel-toggle {
+  top: 50%;
+  left: 50%;
+  right: auto;
+  transform: translate(-50%, -50%);
+}

@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 Arthur Gonze Machado
+document.addEventListener("DOMContentLoaded", () => {
+  const searchInput = document.getElementById("project-search");
+  const dateFilter = document.getElementById("project-filter-date");
+  const projectGrid = document.querySelector(".project-grid");
+  const projectItems = projectGrid
+    ? Array.from(projectGrid.querySelectorAll(".project-item"))
+    : [];
+
+  // Function to filter and display projects
+  function filterProjects() {
+    if (!projectGrid) return;
+
+    const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
+    const selectedDate = dateFilter ? dateFilter.value : "all";
+
+    projectItems.forEach((item) => {
+      const projectName = item.dataset.projectName
+        ? item.dataset.projectName.toLowerCase()
+        : "";
+      const projectDate = item.dataset.projectDate || "";
+
+      // --- Filtering Logic ---
+      // 1. Name Match
+      const nameMatch = projectName.includes(searchTerm);
+
+      // 2. Date Match
+      let dateMatch = false;
+      if (selectedDate === "all") {
+        dateMatch = true;
+      } else if (projectDate) {
+        const projectYear = projectDate.substring(0, 4);
+        if (projectYear === selectedDate) {
+          dateMatch = true;
+        }
+      }
+
+      // --- Show/Hide Item ---
+      if (nameMatch && dateMatch) {
+        item.style.display = "block";
+      } else {
+        item.style.display = "none";
+      }
+    });
+  }
+
+  // --- Event Listeners ---
+  if (searchInput) {
+    searchInput.addEventListener("input", filterProjects);
+  }
+  if (dateFilter) {
+    dateFilter.addEventListener("change", filterProjects);
+  }
+
+  // --- Safety Check ---
+  if (projectItems.length === 0) {
+    console.warn("No project items found for filtering.");
+  }
+  if (!searchInput) {
+    console.warn("Search input #project-search not found.");
+  }
+  if (!dateFilter) {
+    console.warn("Date filter #project-filter-date not found.");
+  }
+});

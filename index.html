@@ -1,0 +1,82 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Arthur Gonze Machado
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Arthur – Portfolio</title>
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/home.css" />
+
+    <!-- Import map for module resolution -->
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
+          "three/addons/Stats": "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"
+        }
+      }
+    </script>
+  </head>
+
+  <body>
+    <!-- Three.js background canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Header & theme-switcher injected here -->
+    <header class="main-header"></header>
+
+    <!-- Main content + welcome panel -->
+    <main>
+      <section class="welcome-section container">
+        <div class="welcome-panel" id="welcomePanel">
+          <button
+            class="panel-toggle"
+            id="toggleBtn"
+            aria-label="Toggle welcome panel"
+          >
+            -
+          </button>
+          <h1>Welcome!</h1>
+          <p>
+            I'm Arthur, a Tech Artist specialized in Computational Fluid
+            Dynamics (but a generalist by heart). This site showcases some of my
+            work and experiments. Feel free to explore!
+          </p>
+          <div class="links">
+            <a
+              href="https://www.linkedin.com/in/arthur-gonze-machado-890715177/"
+              target="_blank"
+              >LinkedIn</a
+            >
+            <a href="https://github.com/arthurgonze" target="_blank">GitHub</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer></footer>
+
+    <!-- Load header/footer, then kick off main.js -->
+    <script type="module">
+      import { loadHeaderAndFooter } from "./js/components.js";
+
+      loadHeaderAndFooter()
+        .then(() => {
+          import("./js/main.js");
+        })
+        .catch(console.error);
+
+      // Panel toggle
+      const panel = document.getElementById("welcomePanel");
+      const btn = document.getElementById("toggleBtn");
+      btn.addEventListener("click", () => {
+        const collapsed = panel.classList.toggle("collapsed");
+        btn.textContent = collapsed ? "+" : "−";
+      });
+    </script>
+  </body>
+</html>

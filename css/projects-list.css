@@ -1,0 +1,122 @@
+/*
+SPDX-License-Identifier: MIT
+Copyright (c) 2026 Arthur Gonze Machado
+*/
+.project-filters {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+
+#project-search,
+#project-filter-date {
+  padding: 10px 15px;
+  border-radius: 5px;
+  border: 1px solid #555;
+  background-color: #333;
+  color: #eee;
+  font-size: 1em;
+}
+
+#project-search::placeholder {
+  color: #aaa;
+}
+
+#project-search {
+  min-width: 250px;
+}
+
+.projects-main > .container {
+  margin-top: 100px;
+}
+
+.projects-main {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.projects-main h1 {
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 2.5em;
+}
+
+.project-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  justify-content: center;
+}
+
+.project-item {
+  background-color: #222;
+  border-radius: 8px;
+  overflow: hidden;
+  width: calc(33.333% - 20px);
+  min-width: 280px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  transition:
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  border: 1px solid #333;
+}
+
+.project-item:hover {
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+}
+
+.project-item a {
+  text-decoration: none;
+  color: #eee;
+  display: block;
+}
+
+.project-item a:hover {
+  text-decoration: none;
+}
+
+.project-item img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  border-bottom: 1px solid #333;
+}
+
+.project-item h3 {
+  margin: 15px 15px 10px 15px;
+  font-size: 1.25em;
+  color: #fff;
+}
+
+.project-item p {
+  margin: 0 15px 15px 15px;
+  font-size: 0.95em;
+  line-height: 1.5;
+  color: #ccc;
+}
+
+@media (max-width: 992px) {
+  .project-item {
+    width: calc(50% - 15px);
+  }
+
+  .project-grid {
+    gap: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .project-item {
+    width: calc(100% - 10px);
+    min-width: unset;
+  }
+
+  .project-grid {
+    gap: 15px;
+  }
+}
