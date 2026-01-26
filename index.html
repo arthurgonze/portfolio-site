@@ -62,13 +62,18 @@ Copyright (c) 2026 Arthur Gonze Machado
 
     <!-- Load header/footer, then kick off main.js -->
     <script type="module">
-      import { loadHeaderAndFooter } from "./js/components.js";
+      import {
+        loadHeaderAndFooter,
+        setupHeaderLinks,
+      } from "./js/components.js";
 
-      loadHeaderAndFooter()
-        .then(() => {
-          import("./js/main.js");
-        })
-        .catch(console.error);
+      try {
+        await loadHeaderAndFooter();
+        await setupHeaderLinks();
+        await import("./js/main.js");
+      } catch (err) {
+        console.error(err);
+      }
 
       // Panel toggle
       const panel = document.getElementById("welcomePanel");

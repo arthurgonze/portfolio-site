@@ -16,7 +16,7 @@ Copyright (c) 2026 Arthur Gonze Machado
       {
         "imports": {
           "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@@.160.0/examples/jsm/"
+          "three/addons/Stats": "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"
         }
       }
     </script>
@@ -49,7 +49,10 @@ Copyright (c) 2026 Arthur Gonze Machado
             data-project-name="Cool Shader Effect"
             data-project-date="2025-03-20"
           >
-            <a href="/portfolio-site/projects/cool-shader-effect.html">
+            <a
+              id="shader-20250320"
+              <!-- href="/portfolio-site/projects/cool-shader-effect.html" -->
+            >
               <img
                 src="https://placehold.co/300x200/00aaff/white?text=Shader+FX"
                 alt="Cool Shader Effect Thumbnail"
@@ -65,7 +68,10 @@ Copyright (c) 2026 Arthur Gonze Machado
             data-project-name="Interactive Unreal Scene"
             data-project-date="2025-02-10"
           >
-            <a href="/portfolio-site/projects/interactive-unreal-scene.html">
+            <a
+              id="unreal-20250210"
+              <!-- href="/portfolio-site/projects/interactive-unreal-scene.html" -->
+            >
               <img
                 src="https://placehold.co/300x200/7700ff/white?text=Unreal+Scene"
                 alt="Interactive Unreal Scene Thumbnail"
@@ -79,9 +85,12 @@ Copyright (c) 2026 Arthur Gonze Machado
           <div
             class="project-item"
             data-project-name="WebVR Experiment"
-            data-project-date="2024-01-05"
+            data-project-date="2026-01-05"
           >
-            <a href="/portfolio-site/projects/webvr-experiment.html">
+            <a
+              id="vr-20260105"
+              <!-- href="/portfolio-site/projects/webvr-experiment.html" -->
+            >
               <img
                 src="https://placehold.co/300x200/ff9900/white?text=WebVR+Exp"
                 alt="WebVR Experiment Thumbnail"
@@ -100,13 +109,21 @@ Copyright (c) 2026 Arthur Gonze Machado
     <footer></footer>
 
     <script type="module">
-      import { loadHeaderAndFooter } from "./js/components.js";
-      loadHeaderAndFooter()
-        .then(() => {
-          import("./js/main.js");
-          import("./js/projects.js");
-        })
-        .catch(console.error);
+      import {
+        loadHeaderAndFooter,
+        setupHeaderLinks,
+	setupProjectLinks,
+      } from "./js/components.js";
+
+      try {
+        await loadHeaderAndFooter();
+        await setupHeaderLinks();
+	await setupProjectLinks();
+        await import("./js/main.js");
+        await import("./js/projects.js");
+      } catch (err) {
+        console.error(err);
+      }
     </script>
   </body>
 </html>

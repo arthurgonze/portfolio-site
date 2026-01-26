@@ -16,7 +16,7 @@ Copyright (c) 2026 Arthur Gonze Machado
       {
         "imports": {
           "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
-          "three/addons/": "https://cdn.jsdelivr.net/npm/three@@.160.0/examples/jsm/"
+          "three/addons/Stats": "https://cdnjs.cloudflare.com/ajax/libs/stats.js/r17/Stats.min.js"
         }
       }
     </script>
@@ -75,12 +75,18 @@ Copyright (c) 2026 Arthur Gonze Machado
     <footer></footer>
 
     <script type="module">
-      import { loadHeaderAndFooter } from "../js/components.js";
-      loadHeaderAndFooter()
-        .then(() => {
-          import("../js/main.js");
-        })
-        .catch(console.error);
+      import {
+        loadHeaderAndFooter,
+        setupHeaderLinks,
+      } from "../js/components.js";
+
+      try {
+        await loadHeaderAndFooter();
+        await setupHeaderLinks();
+        await import("../js/main.js");
+      } catch (err) {
+        console.error(err);
+      }
     </script>
   </body>
 </html>
