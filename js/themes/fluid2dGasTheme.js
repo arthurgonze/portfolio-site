@@ -574,6 +574,10 @@ export function setupFluid2dGasScene(themeGroup) {
           `Debug mode: ${config.debugMode === 0 ? "Density" : "Velocity"}`,
         );
         break;
+      case "d":
+        debugInfo.style.display =
+          debugInfo.style.display === "none" ? "block" : "none";
+        break;
     }
   });
 
@@ -597,10 +601,11 @@ export function setupFluid2dGasScene(themeGroup) {
 	position: fixed; top: 75px; left: 20px; z-index: 1000;
 	padding: 8px; background: rgba(0, 0, 0, 0.7); color: white;
 	font-family: monospace; font-size: 11px; border-radius: 4px;
-	pointer-events: none;
+	pointer-events: none; display: none;
 `;
   debugInfo.innerHTML = `
-	Press V: Toggle velocity view<br>
+	Press D: Toggle Debug Visibility<br>
+	Press V: Toggle Velocity/Density view<br>
 	Resolution: ${config.resolution}×${config.resolution}<br>
 	Texture: ${floatType === THREE.FloatType ? "Float32" : floatType === THREE.HalfFloatType ? "Float16" : "Byte"}
 `;
