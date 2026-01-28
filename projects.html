@@ -43,57 +43,7 @@ Copyright (c) 2026 Arthur Gonze Machado
           </select>
         </div>
 
-        <div class="project-grid">
-          <div
-            class="project-item"
-            data-project-name="Cool Shader Effect"
-            data-project-date="2025-03-20"
-          >
-            <a id="shader-20250320">
-              <img
-                src="https://placehold.co/300x200/00aaff/white?text=Shader+FX"
-                alt="Cool Shader Effect Thumbnail"
-              />
-              <h3>Cool Shader Effect</h3>
-              <p>
-                A short description of this amazing shader project goes here.
-              </p>
-            </a>
-          </div>
-          <div
-            class="project-item"
-            data-project-name="Interactive Unreal Scene"
-            data-project-date="2025-02-10"
-          >
-            <a id="unreal-20250210">
-              <img
-                src="https://placehold.co/300x200/7700ff/white?text=Unreal+Scene"
-                alt="Interactive Unreal Scene Thumbnail"
-              />
-              <h3>Interactive Unreal Scene</h3>
-              <p>
-                Brief overview of the Unreal Engine project and its features.
-              </p>
-            </a>
-          </div>
-          <div
-            class="project-item"
-            data-project-name="WebVR Experiment"
-            data-project-date="2026-01-05"
-          >
-            <a id="vr-20260105">
-              <img
-                src="https://placehold.co/300x200/ff9900/white?text=WebVR+Exp"
-                alt="WebVR Experiment Thumbnail"
-              />
-              <h3>WebVR Experiment</h3>
-              <p>
-                Exploring virtual reality interactions directly in the web
-                browser.
-              </p>
-            </a>
-          </div>
-        </div>
+        <div class="project-grid"></div>
       </div>
     </main>
 
@@ -103,13 +53,11 @@ Copyright (c) 2026 Arthur Gonze Machado
       import {
         loadHeaderAndFooter,
         setupHeaderLinks,
-        setupProjectLinks,
       } from "./js/components.js";
 
       try {
         await loadHeaderAndFooter();
         await setupHeaderLinks();
-        await setupProjectLinks();
         await import("./js/main.js");
         await import("./js/projects.js");
       } catch (err) {

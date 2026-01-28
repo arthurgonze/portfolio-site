@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import { BASE_PATH } from "./config.js";
+import { projects } from "./projectsData.js";
 
 export async function includeComponent(url, selector) {
   const container = document.querySelector(selector);
@@ -24,10 +25,10 @@ export function setupHeaderLinks() {
 }
 
 export function setupProjectLinks() {
-  document.getElementById("shader-20250320").href =
-    `${BASE_PATH}projects/cool-shader-effect.html`;
-  document.getElementById("unreal-20250210").href =
-    `${BASE_PATH}projects/interactive-unreal-scene.html`;
-  document.getElementById("vr-20260105").href =
-    `${BASE_PATH}projects/webvr-experiment.html`;
+  projects.forEach((project) => {
+    const link = document.getElementById(project.id);
+    if (link) {
+      link.href = `${BASE_PATH}projects/${project.slug}.html`;
+    }
+  });
 }

@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
+import { setupProjectLinks } from "./components.js";
+import { projects } from "./projectsData.js";
+
 const searchInput = document.getElementById("project-search");
 const dateFilter = document.getElementById("project-filter-date");
 const projectGrid = document.querySelector(".project-grid");
-const projectItems = projectGrid
+let projectItems = projectGrid
   ? Array.from(projectGrid.querySelectorAll(".project-item"))
   : [];
 
@@ -44,6 +47,30 @@ function filterProjects() {
   });
 }
 
+function renderProjectCards() {
+  const grid = document.querySelector(".project-grid");
+  if (!grid) return;
+
+  grid.innerHTML = projects
+    .map(
+      (p) => `
+	<div class="project-item" data-project-name="${p.name}" data-project-date="${p.date}">
+		<a id="${p.id}">
+			<img src="${p.thumbnail}" alt="${p.name} Thumbnail" />
+			<h3>${p.name}</h3>
+			<p>${p.description}</p>
+		</a>
+	</div>
+	`,
+    )
+    .join("");
+
+  setupProjectLinks();
+  projectItems = projectGrid
+    ? Array.from(projectGrid.querySelectorAll(".project-item"))
+    : [];
+}
+
 // --- Event Listeners ---
 if (searchInput) {
   searchInput.addEventListener("input", filterProjects);
@@ -62,3 +89,5 @@ if (!searchInput) {
 if (!dateFilter) {
   console.warn("Date filter #project-filter-date not found.");
 }
+
+renderProjectCards();
