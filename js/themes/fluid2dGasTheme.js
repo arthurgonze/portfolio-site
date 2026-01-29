@@ -622,9 +622,6 @@ export function setupFluid2dGasScene(themeGroup) {
     window.removeEventListener("mouseup", onMouseUp);
 
     // Remove UI elements
-    if (button && button.parentNode) {
-      button.parentNode.removeChild(button);
-    }
     if (debugInfo && debugInfo.parentNode) {
       debugInfo.parentNode.removeChild(debugInfo);
     }

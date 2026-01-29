@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import * as THREE from "three";
+import { BASE_PATH } from "../config.js";
+
 const loader = new THREE.TextureLoader();
 
 export function setupDvdScreensaverScene(themeGroup) {
@@ -11,7 +13,7 @@ export function setupDvdScreensaverScene(themeGroup) {
   themeGroup.add(sprite);
 
   loader.load(
-    "./images/dvd-logo.png",
+    `${BASE_PATH}images/dvd-logo.png`,
     (tex) => {
       const { width: w, height: h } = tex.image;
       const targetH = 2;

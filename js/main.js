@@ -1,8 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import * as THREE from "three";
-import { themes, getThemeConfig, formatThemeName } from "./themeConfig.js";
+import { getThemeConfig } from "./themeConfig.js";
+import {
+  populateThemeDropdown,
+  getStoredTheme,
+  saveTheme,
+} from "./themeSwitcher.js";
 import Stats from "three/addons/Stats";
+import { showToast } from "./utils/errorHandling.js";
 
 function initThreeJS() {
   // --- FPS COUNTER SETUP ---
@@ -53,19 +59,6 @@ function initThreeJS() {
   let currentThemeAnimType = "";
   const themeSwitcher = document.getElementById("theme-switcher");
 
-  // Build theme dropdown
-  function populateDropdown() {
-    if (!themeSwitcher) return;
-    themeSwitcher.innerHTML = "";
-    for (const key in themes) {
-      const opt = document.createElement("option");
-      opt.value = key;
-      opt.textContent = themes[key].displayName || formatThemeName(key);
-      themeSwitcher.appendChild(opt);
-    }
-  }
-  populateDropdown();
-
   // DVD bounce helpers
   let bounceBoundsHelper = null;
   let bounceOrthoCam = null;
@@ -79,13 +72,13 @@ function initThreeJS() {
     }
     bounceOrthoCam = null;
 
+    // remove old theme
     objectsToAnimate.forEach((obj) => {
-      if (obj.cleannup && typeof obj.cleanup === "function") {
-        obj.cleanup;
+      if (obj.cleanup && typeof obj.cleanup === "function") {
+        obj.cleanup();
       }
     });
 
-    // remove old theme
     while (currentGroup.children.length) {
       currentGroup.remove(currentGroup.children[0]);
     }
@@ -99,18 +92,13 @@ function initThreeJS() {
       objectsToAnimate = mod[cfg.setupFn](currentGroup) || [];
     } catch (err) {
       console.error(`Error loading theme "${name}":`, err);
+      showToast(`Failed to load "${name}" theme. Using fallback.`, "error");
 
-      showThemeError(name, err);
-
-      // fallback to sunset, if possible
+      // fallback to sunset
       if (name !== "sunset") {
-        themeSwitcher.value - "sunset";
+        themeSwitcher.value = "sunset";
         await loadTheme("sunset");
       }
-      // const fb = getThemeConfig("sunset");
-      // currentThemeAnimType = fb.animType;
-      // const mod = await import(fb.path);
-      // objectsToAnimate = mod[fb.setupFn](currentGroup) || [];
     }
 
     // If it's DVD bounce, build an orthographic camera matching the current frustum
@@ -135,18 +123,6 @@ function initThreeJS() {
       bounceOrthoCam.position.copy(perspCam.position);
       bounceOrthoCam.lookAt(0, 0, 0);
     }
-  }
-
-  function showThemeError(themeName, error) {
-    const toast = document.createElement("div");
-    toast.style.cssText = `
-	position:  fixed; top: 70px; right: 20px; z-index:200; 
-	background: rgba(255, 0, 0, 0.9); color: white; padding: 12px 20px; 
-	border-radius: 5px; font-size: 14px;
-`;
-    toast.textContent = `Failed to load "${themeName}" theme. Using fallback.`;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
   }
 
   // Main render/animate loop
@@ -249,6 +225,8 @@ function initThreeJS() {
     if (stats) stats.end();
   }
 
+  populateThemeDropdown(themeSwitcher);
+
   // theme switcher handler
   themeSwitcher?.addEventListener("change", (e) => {
     loadTheme(e.target.value);
@@ -266,14 +244,10 @@ function initThreeJS() {
     loadTheme(themeSwitcher.value);
   });
 
-  // initial theme
-  let initial = "sunset";
-  try {
-    const saved = localStorage.getItem("selectedTheme");
-    if (saved && themes[saved]) initial = saved;
-  } catch {}
-  themeSwitcher.value = initial;
-  loadTheme(initial);
+  // Load initial theme
+  const initialTheme = getStoredTheme();
+  themeSwitcher.value = initialTheme;
+  loadTheme(initialTheme);
 
   animate(0);
 }

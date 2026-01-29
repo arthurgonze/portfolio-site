@@ -1,10 +1,5 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
-function formatThemeName(key) {
-  return key
-    .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (str) => str.toUpperCase());
-}
 
 export const themes = {
   sunset: {
@@ -36,5 +31,3 @@ export const themes = {
 export function getThemeConfig(themeName) {
   return themes[themeName] || themes["sunset"];
 }
-
-export { formatThemeName };
