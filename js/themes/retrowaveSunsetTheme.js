@@ -227,8 +227,20 @@ export function setupSunsetScene(themeGroup) {
   fogMesh.position.set(0, -10, -140);
   themeGroup.add(fogMesh);
 
-  // 3) Return all animating materials (will have uniforms.time updated)
-  return [terrainMat, sun.material, fogMat];
+  // 3) Return
+  return [
+    {
+      type: "materialTime",
+      update: (t, dt) => {
+        terrainMat.uniforms.time.value = t;
+        sun.material.uniforms.time.value = t;
+        fogMat.uniforms.time.value = t;
+        if (terrainMat.uniforms?.uOffset) {
+          terrainMat.uniforms.uOffset.value += 15 * dt;
+        }
+      },
+    },
+  ];
 }
 
 // ---- 4) HELPER: Striped Sun Shader ----

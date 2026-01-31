@@ -50,6 +50,16 @@ export function setupOldTvNoiseScene(themeGroup) {
   const screenQuad = new THREE.Mesh(geometry, noiseMaterial);
   themeGroup.add(screenQuad);
 
-  // Return material so `animate()` can update uniforms.time & uniforms.u_resolution
-  return [noiseMaterial];
+  return [
+    {
+      type: "materialTimeRes",
+      update: (t, dt) => {
+        noiseMaterial.uniforms.time.value = t;
+        noiseMaterial.uniforms.u_resolution.value.set(
+          window.innerWidth,
+          window.innerHeight,
+        );
+      },
+    },
+  ];
 }

@@ -31,5 +31,54 @@ export function setupDvdScreensaverScene(themeGroup) {
     (err) => console.error("Failed to load DVD logo:", err),
   );
 
-  return [sprite];
+  // return [sprite];
+  return [
+    {
+      type: "bounceDvd",
+      sprite: sprite,
+      update: (t, dt, cam) => {
+        const headerPx = document.querySelector(".main-header").clientHeight;
+        const footerPx = document.querySelector("footer").clientHeight;
+        const screenH = window.innerHeight;
+
+        // move
+        sprite.position.add(sprite.userData.velocity);
+
+        // bounds
+        const halfW = cam.right;
+        const halfH = cam.top;
+        const headerWorld = (headerPx / screenH) * (halfH * 2);
+        const footerWorld = (footerPx / screenH) * (halfH * 2);
+        const hsW = sprite.scale.x / 2;
+        const hsH = sprite.scale.y / 2;
+
+        const maxX = halfW - hsW,
+          minX = -halfW + hsW;
+        const maxY = halfH - headerWorld - hsH;
+        const minY = -halfH + footerWorld + hsH;
+
+        // bounce X
+        if (sprite.position.x > maxX) {
+          sprite.position.x = maxX;
+          sprite.userData.velocity.x *= -1;
+          sprite.material.color.setHex(Math.random() * 0xffffff);
+        } else if (sprite.position.x < minX) {
+          sprite.position.x = minX;
+          sprite.userData.velocity.x *= -1;
+          sprite.material.color.setHex(Math.random() * 0xffffff);
+        }
+
+        // bounce Y
+        if (sprite.position.y > maxY) {
+          sprite.position.y = maxY;
+          sprite.userData.velocity.y *= -1;
+          sprite.material.color.setHex(Math.random() * 0xffffff);
+        } else if (sprite.position.y < minY) {
+          sprite.position.y = minY;
+          sprite.userData.velocity.y *= -1;
+          sprite.material.color.setHex(Math.random() * 0xffffff);
+        }
+      },
+    },
+  ];
 }

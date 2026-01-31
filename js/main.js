@@ -9,6 +9,7 @@ import {
 } from "./themeSwitcher.js";
 import Stats from "three/addons/Stats";
 import { showToast } from "./utils/errorHandling.js";
+import { createOrthoCam } from "./utils/threeJSUtils.js";
 
 function initThreeJS() {
   // --- FPS COUNTER SETUP ---
@@ -24,7 +25,6 @@ function initThreeJS() {
     document.body.appendChild(stats.dom);
     stats.dom.hidden = true;
 
-    // toggle with 'F' key
     window.addEventListener("keydown", (e) => {
       if (e.key === "F" || e.key === "f") {
         stats.dom.hidden = !stats.dom.hidden;
@@ -52,11 +52,10 @@ function initThreeJS() {
 
   // Holder for active theme objects
   const currentGroup = new THREE.Group();
-  currentGroup.renderer = renderer; // Pass renderer to theme
+  currentGroup.renderer = renderer;
   scene.add(currentGroup);
 
   let objectsToAnimate = [];
-  let currentThemeAnimType = "";
   const themeSwitcher = document.getElementById("theme-switcher");
 
   // DVD bounce helpers
@@ -70,7 +69,6 @@ function initThreeJS() {
       scene.remove(bounceBoundsHelper);
       bounceBoundsHelper = null;
     }
-    bounceOrthoCam = null;
 
     // remove old theme
     objectsToAnimate.forEach((obj) => {
@@ -85,7 +83,6 @@ function initThreeJS() {
     objectsToAnimate = [];
 
     const cfg = getThemeConfig(name);
-    currentThemeAnimType = cfg.animType;
 
     try {
       const mod = await import(cfg.path);
@@ -102,27 +99,10 @@ function initThreeJS() {
     }
 
     // If it's DVD bounce, build an orthographic camera matching the current frustum
-    if (currentThemeAnimType === "bounceDvd" && objectsToAnimate[0]) {
-      const depth = Math.abs(
-        perspCam.position.z - objectsToAnimate[0].position.z,
-      );
-      const vHeight =
-        2 * Math.tan(THREE.MathUtils.degToRad(perspCam.fov / 2)) * depth;
-      const vWidth = vHeight * perspCam.aspect;
-      const halfW = vWidth / 2,
-        halfH = vHeight / 2;
-
-      bounceOrthoCam = new THREE.OrthographicCamera(
-        -halfW,
-        halfW,
-        halfH,
-        -halfH,
-        perspCam.near,
-        perspCam.far,
-      );
-      bounceOrthoCam.position.copy(perspCam.position);
-      bounceOrthoCam.lookAt(0, 0, 0);
-    }
+    bounceOrthoCam =
+      cfg.animType === "bounceDvd" && objectsToAnimate[0]
+        ? createOrthoCam(perspCam, objectsToAnimate[0])
+        : null;
   }
 
   // Main render/animate loop
@@ -135,91 +115,15 @@ function initThreeJS() {
     const dt = Math.min((currentTime - lastTime) * 0.001, 0.033); // Cap at 30fps
     lastTime = currentTime;
 
-    switch (currentThemeAnimType) {
-      // Retrowave Sunset (materialTime)
-      case "materialTime":
-        objectsToAnimate.forEach((m) => {
-          if (m.uniforms?.time) m.uniforms.time.value = t;
-          if (m.uniforms?.uOffset) m.uniforms.uOffset.value += 15 * dt;
-        });
-        break;
-
-      // Old TV Noise (materialTimeRes)
-      case "materialTimeRes":
-        objectsToAnimate.forEach((m) => {
-          if (m.uniforms?.time) m.uniforms.time.value = t;
-          if (m.uniforms?.u_resolution)
-            m.uniforms.u_resolution.value.set(
-              window.innerWidth,
-              window.innerHeight,
-            );
-        });
-        break;
-
-      // Fluid 2D Simulation
-      case "fluid2d":
-        objectsToAnimate.forEach((obj) => {
-          if (obj.type === "fluid2d" && obj.step) {
-            obj.step(t, dt);
-          }
-        });
-        break;
-
-      // DVD Screensaver (bounceDvd)
-      case "bounceDvd": {
-        const cam = bounceOrthoCam || perspCam;
-        const headerPx = document.querySelector(".main-header").clientHeight;
-        const footerPx = document.querySelector("footer").clientHeight;
-        const screenH = window.innerHeight;
-
-        objectsToAnimate.forEach((obj) => {
-          // move
-          obj.position.add(obj.userData.velocity);
-
-          // bounds
-          const halfW = cam.right;
-          const halfH = cam.top;
-          const headerWorld = (headerPx / screenH) * (halfH * 2);
-          const footerWorld = (footerPx / screenH) * (halfH * 2);
-          const hsW = obj.scale.x / 2;
-          const hsH = obj.scale.y / 2;
-
-          const maxX = halfW - hsW,
-            minX = -halfW + hsW;
-          const maxY = halfH - headerWorld - hsH;
-          const minY = -halfH + footerWorld + hsH;
-
-          // bounce X
-          if (obj.position.x > maxX) {
-            obj.position.x = maxX;
-            obj.userData.velocity.x *= -1;
-            obj.material.color.setHex(Math.random() * 0xffffff);
-          } else if (obj.position.x < minX) {
-            obj.position.x = minX;
-            obj.userData.velocity.x *= -1;
-            obj.material.color.setHex(Math.random() * 0xffffff);
-          }
-
-          // bounce Y
-          if (obj.position.y > maxY) {
-            obj.position.y = maxY;
-            obj.userData.velocity.y *= -1;
-            obj.material.color.setHex(Math.random() * 0xffffff);
-          } else if (obj.position.y < minY) {
-            obj.position.y = minY;
-            obj.userData.velocity.y *= -1;
-            obj.material.color.setHex(Math.random() * 0xffffff);
-          }
-        });
-        break;
-      }
-    }
-
     // choose correct camera
-    const renderCam =
-      currentThemeAnimType === "bounceDvd" && bounceOrthoCam
-        ? bounceOrthoCam
-        : perspCam;
+    const renderCam = bounceOrthoCam || perspCam;
+
+    objectsToAnimate.forEach((obj) => {
+      if (obj.update) {
+        obj.update(t, dt, renderCam);
+      }
+    });
+
     renderer.render(scene, renderCam);
 
     if (stats) stats.end();
@@ -230,9 +134,7 @@ function initThreeJS() {
   // theme switcher handler
   themeSwitcher?.addEventListener("change", (e) => {
     loadTheme(e.target.value);
-    try {
-      localStorage.setItem("selectedTheme", e.target.value);
-    } catch {}
+    saveTheme(e.target.value);
   });
 
   // on resize

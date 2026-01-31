@@ -669,26 +669,25 @@ export function setupFluid2dGasScene(themeGroup) {
     console.log("Fluid simulation API exposed as window.fluidAPI");
   }
 
-  // Return updateable material
   let lastTime = 0;
+  let isActive = true;
   return [
     {
-      uniforms: {
-        time: {
-          set value(t) {
-            this._value = t;
-            const dt = t - lastTime;
-            lastTime = t;
-            simulationStep(t, dt);
-          },
-          get value() {
-            return this._value || 0;
-          },
-        },
-        u_resolution: displayUniforms.u_resolution,
+      type: "fluid2d",
+      update: (t, dt) => {
+        if (!isActive) return;
+        simulationStep(t, dt);
+
+        displayUniforms.time.value = t;
+        displayUniforms.u_resolution.value.set(
+          window.innerWidth,
+          window.innerHeight,
+        );
       },
-      fluidAPI,
-      cleanup,
+      cleanup: () => {
+        isActive = false;
+        cleanup;
+      },
     },
   ];
 }
