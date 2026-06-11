@@ -1,26 +1,50 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import * as THREE from "three";
+import { ShaderThemeBase } from "../background/ShaderThemeBase.js";
 
-export function setupOldTvNoiseScene(themeGroup) {
-  const noiseMaterial = new THREE.ShaderMaterial({
-    uniforms: {
-      time: { value: 0 },
-      u_resolution: {
-        value: new THREE.Vector2(window.innerWidth, window.innerHeight),
+/**
+ * Theme metadata for the old TV noise background.
+ */
+export const themeMeta = {
+  id: "oldTvNoise",
+  label: "Old TV Noise",
+  order: 20,
+};
+
+/**
+ * Creates the old TV noise theme instance.
+ * @param {object} context
+ */
+export function createTheme(context) {
+  return new OldTvNoiseTheme(context);
+}
+
+class OldTvNoiseTheme extends ShaderThemeBase {
+  /**
+   * @param {object} context
+   */
+  constructor(context) {
+    super(context, themeMeta.id);
+
+    this.noiseMaterial = new THREE.ShaderMaterial({
+      uniforms: {
+        time: { value: 0 },
+        u_resolution: {
+          value: new THREE.Vector2(context.viewport.width, context.viewport.height),
+        },
+        u_scan_speed: { value: 0.25 },
+        u_bg_noise_amount: { value: 0.2 },
+        u_line_noise_amount: { value: 0.5 },
+        u_line_thickness: { value: 0.001 },
       },
-      u_scan_speed: { value: 0.25 },
-      u_bg_noise_amount: { value: 0.2 },
-      u_line_noise_amount: { value: 0.5 },
-      u_line_thickness: { value: 0.001 },
-    },
-    vertexShader: `
+      vertexShader: `
 	varying vec2 vUv;
 	void main() {
 		vUv = uv;
 		gl_Position = vec4(position.xy, 0.0, 1.0);
 	}`,
-    fragmentShader: `
+      fragmentShader: `
 	uniform float time;
 	uniform float u_scan_speed;
 	uniform float u_bg_noise_amount;
@@ -42,24 +66,36 @@ export function setupOldTvNoiseScene(themeGroup) {
 		float gray = clamp(0.05 + bgNoiseVal + noisyLineVal, 0.0, 1.0);
 		gl_FragColor = vec4(vec3(gray), 1.0);
 	}`,
-    depthTest: false,
-    depthWrite: false,
-  });
+      depthTest: false,
+      depthWrite: false,
+    });
 
-  const geometry = new THREE.PlaneGeometry(2, 2);
-  const screenQuad = new THREE.Mesh(geometry, noiseMaterial);
-  themeGroup.add(screenQuad);
+    const geometry = new THREE.PlaneGeometry(2, 2);
+    const screenQuad = new THREE.Mesh(geometry, this.noiseMaterial);
+    screenQuad.frustumCulled = false;
+    this.add(screenQuad);
+  }
 
-  return [
-    {
-      type: "materialTimeRes",
-      update: (t, dt) => {
-        noiseMaterial.uniforms.time.value = t;
-        noiseMaterial.uniforms.u_resolution.value.set(
-          window.innerWidth,
-          window.innerHeight,
-        );
-      },
-    },
-  ];
+  /**
+   * @param {number} time
+   * @param {number} _deltaTime
+   */
+  update(time, _deltaTime) {
+    this.noiseMaterial.uniforms.time.value = time;
+    this.noiseMaterial.uniforms.u_resolution.value.set(
+      this.viewport.width,
+      this.viewport.height,
+    );
+  }
+
+  /**
+   * @param {object} viewport
+   */
+  resize(viewport) {
+    super.resize(viewport);
+    this.noiseMaterial.uniforms.u_resolution.value.set(
+      viewport.width,
+      viewport.height,
+    );
+  }
 }

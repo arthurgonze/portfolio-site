@@ -2,83 +2,156 @@
 // Copyright (c) 2026 Arthur Gonze Machado
 import * as THREE from "three";
 import { BASE_PATH } from "../config.js";
+import { ShaderThemeBase } from "../background/ShaderThemeBase.js";
 
-const loader = new THREE.TextureLoader();
+/**
+ * Theme metadata for the DVD screensaver background.
+ */
+export const themeMeta = {
+  id: "dvdScreensaver",
+  label: "DVD Screensaver",
+  order: 30,
+};
 
-export function setupDvdScreensaverScene(themeGroup) {
-  const sprite = new THREE.Sprite();
-  sprite.center.set(0.5, 0.5);
-  sprite.position.set(0, -2, 0);
-  sprite.userData.velocity = new THREE.Vector3(0.08, 0.06, 0);
-  themeGroup.add(sprite);
+/**
+ * Creates the DVD screensaver theme instance.
+ * @param {object} context
+ */
+export function createTheme(context) {
+  return new DvdScreensaverTheme(context);
+}
 
-  loader.load(
-    `${BASE_PATH}images/dvd-logo.png`,
-    (tex) => {
-      const { width: w, height: h } = tex.image;
-      const targetH = 2;
+class DvdScreensaverTheme extends ShaderThemeBase {
+  /**
+   * @param {object} context
+   */
+  constructor(context) {
+    super(context, themeMeta.id);
 
-      sprite.material = new THREE.SpriteMaterial({
-        map: tex,
+    this.textureLoader = new THREE.TextureLoader();
+    this.sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
         color: 0xffffff,
         transparent: true,
-        alphaTest: 0.5,
-      });
+        opacity: 0,
+        depthWrite: false,
+      }),
+    );
+    this.sprite.center.set(0.5, 0.5);
+    this.sprite.position.set(0, -2, 0);
+    this.sprite.userData.velocity = new THREE.Vector3(0.08, 0.06, 0);
+    this.add(this.sprite);
 
-      sprite.scale.set((w / h) * targetH, targetH, 1);
-    },
-    undefined,
-    (err) => console.error("Failed to load DVD logo:", err),
-  );
+    this._bounds = {
+      minX: -1,
+      maxX: 1,
+      minY: -1,
+      maxY: 1,
+    };
 
-  // return [sprite];
-  return [
-    {
-      type: "bounceDvd",
-      sprite: sprite,
-      update: (t, dt, cam) => {
-        const headerPx = document.querySelector(".main-header").clientHeight;
-        const footerPx = document.querySelector("footer").clientHeight;
-        const screenH = window.innerHeight;
+    this._loadLogo();
+    this.resize(context.viewport);
+  }
 
-        // move
-        sprite.position.add(sprite.userData.velocity);
+  /**
+   * @param {number} _time
+   * @param {number} deltaTime
+   */
+  update(_time, deltaTime) {
+    if (!this.sprite.material.map) {
+      return;
+    }
 
-        // bounds
-        const halfW = cam.right;
-        const halfH = cam.top;
-        const headerWorld = (headerPx / screenH) * (halfH * 2);
-        const footerWorld = (footerPx / screenH) * (halfH * 2);
-        const hsW = sprite.scale.x / 2;
-        const hsH = sprite.scale.y / 2;
+    const frameScale = deltaTime > 0 ? deltaTime * 60 : 1;
+    this.sprite.position.addScaledVector(this.sprite.userData.velocity, frameScale);
 
-        const maxX = halfW - hsW,
-          minX = -halfW + hsW;
-        const maxY = halfH - headerWorld - hsH;
-        const minY = -halfH + footerWorld + hsH;
+    this._handleBounds();
+  }
 
-        // bounce X
-        if (sprite.position.x > maxX) {
-          sprite.position.x = maxX;
-          sprite.userData.velocity.x *= -1;
-          sprite.material.color.setHex(Math.random() * 0xffffff);
-        } else if (sprite.position.x < minX) {
-          sprite.position.x = minX;
-          sprite.userData.velocity.x *= -1;
-          sprite.material.color.setHex(Math.random() * 0xffffff);
+  /**
+   * @param {object} viewport
+   */
+  resize(viewport) {
+    super.resize(viewport);
+    this.camera = /** @type {THREE.OrthographicCamera} */ (this.camera);
+    this._updateBounds();
+  }
+
+  /**
+   * Loads the DVD logo texture and updates the sprite when ready.
+   * @private
+   */
+  _loadLogo() {
+    this.textureLoader.load(
+      `${BASE_PATH}images/dvd-logo.png`,
+      (texture) => {
+        if (this._disposed) {
+          texture.dispose();
+          return;
         }
 
-        // bounce Y
-        if (sprite.position.y > maxY) {
-          sprite.position.y = maxY;
-          sprite.userData.velocity.y *= -1;
-          sprite.material.color.setHex(Math.random() * 0xffffff);
-        } else if (sprite.position.y < minY) {
-          sprite.position.y = minY;
-          sprite.userData.velocity.y *= -1;
-          sprite.material.color.setHex(Math.random() * 0xffffff);
-        }
+        const { width, height } = texture.image;
+        const targetHeight = 2;
+
+        this.sprite.material.map = texture;
+        this.sprite.material.alphaTest = 0.5;
+        this.sprite.material.opacity = 1;
+        this.sprite.material.needsUpdate = true;
+        this.sprite.scale.set((width / height) * targetHeight, targetHeight, 1);
+        this._updateBounds();
       },
-    },
-  ];
+      undefined,
+      (err) => console.error("Failed to load DVD logo:", err),
+    );
+  }
+
+  /**
+   * Recomputes the playable area using the shared orthographic camera.
+   * @private
+   */
+  _updateBounds() {
+    const headerPx = document.querySelector(".main-header")?.clientHeight || 0;
+    const footerPx = document.querySelector("footer")?.clientHeight || 0;
+    const camera = /** @type {THREE.OrthographicCamera} */ (this.camera);
+    const visibleHeight = camera.top - camera.bottom;
+    const visibleWidth = camera.right - camera.left;
+    const headerWorld = (headerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
+    const footerWorld = (footerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
+    const halfSpriteWidth = this.sprite.scale.x / 2;
+    const halfSpriteHeight = this.sprite.scale.y / 2;
+
+    this._bounds.minX = -visibleWidth / 2 + halfSpriteWidth;
+    this._bounds.maxX = visibleWidth / 2 - halfSpriteWidth;
+    this._bounds.minY = -visibleHeight / 2 + footerWorld + halfSpriteHeight;
+    this._bounds.maxY = visibleHeight / 2 - headerWorld - halfSpriteHeight;
+  }
+
+  /**
+   * Applies bounce behavior against the current viewport bounds.
+   * @private
+   */
+  _handleBounds() {
+    const { minX, maxX, minY, maxY } = this._bounds;
+    const sprite = this.sprite;
+
+    if (sprite.position.x > maxX) {
+      sprite.position.x = maxX;
+      sprite.userData.velocity.x *= -1;
+      sprite.material.color.setHex(Math.floor(Math.random() * 0xffffff));
+    } else if (sprite.position.x < minX) {
+      sprite.position.x = minX;
+      sprite.userData.velocity.x *= -1;
+      sprite.material.color.setHex(Math.floor(Math.random() * 0xffffff));
+    }
+
+    if (sprite.position.y > maxY) {
+      sprite.position.y = maxY;
+      sprite.userData.velocity.y *= -1;
+      sprite.material.color.setHex(Math.floor(Math.random() * 0xffffff));
+    } else if (sprite.position.y < minY) {
+      sprite.position.y = minY;
+      sprite.userData.velocity.y *= -1;
+      sprite.material.color.setHex(Math.floor(Math.random() * 0xffffff));
+    }
+  }
 }
