@@ -243,7 +243,7 @@ function parseCodeBlock(lines, startIndex) {
 }
 
 function parseList(lines, startIndex, footnoteDefinitions, footnoteOrder) {
-  const firstLine = lines[startIndex];
+  const firstLine = lines[startIndex] || "";
   const orderedMatch = firstLine.match(/^\s*(\d+)\.\s+(.+)$/);
   const ordered = Boolean(orderedMatch);
   const startNumber = ordered ? Number.parseInt(orderedMatch[1], 10) || 1 : 1;
@@ -251,7 +251,7 @@ function parseList(lines, startIndex, footnoteDefinitions, footnoteOrder) {
   let index = startIndex;
 
   while (index < lines.length) {
-    const line = lines[index];
+    const line = lines[index] || "";
     const match = ordered
       ? line.match(/^\s*(\d+)\.\s+(.+)$/)
       : line.match(/^\s*[-*+]\s+(.+)$/);
@@ -260,11 +260,12 @@ function parseList(lines, startIndex, footnoteDefinitions, footnoteOrder) {
       break;
     }
 
-    let itemText = match[2].trim();
+    const rawItemText = ordered ? match[2] : match[1];
+    let itemText = (rawItemText || "").trim();
     index++;
 
     while (index < lines.length) {
-      const nextLine = lines[index];
+      const nextLine = lines[index] || "";
       const nextIsListItem = ordered
         ? /^\s*\d+\.\s+/.test(nextLine)
         : /^\s*[-*+]\s+/.test(nextLine);
