@@ -13,11 +13,16 @@ export function setupHeaderLinks() {
   if (navProjects) navProjects.href = `${BASE_PATH}projects.html`;
 }
 
+/**
+ * Wires project cards to the legacy detail pages or an override URL.
+ */
 export function setupProjectLinks() {
   projects.forEach((project) => {
     const link = document.getElementById(project.id);
     if (link) {
-      link.href = `${BASE_PATH}projects/${project.slug}.html`;
+      link.href = project.detailUrl
+        ? `${BASE_PATH}${project.detailUrl}`
+        : `${BASE_PATH}projects/${project.slug}.html`;
     }
   });
 }
