@@ -160,6 +160,9 @@ Support:
 * Inline code.
 * Blockquotes if easy.
 * Horizontal rules if easy.
+* Tables.
+* Highlight.
+* Footnotes.
 
 Do not support arbitrary HTML injection unless there is a clear reason.
 
