@@ -15,8 +15,8 @@ Copyright (c) 2026 Arthur Gonze Machado
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
-          "three/addons/Stats": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/libs/stats.module.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
+          "three/addons/Stats": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/libs/stats.module.js"
         }
       }
     </script>
@@ -37,13 +37,14 @@ Copyright (c) 2026 Arthur Gonze Machado
 
     <script type="module">
       import { loadHeaderAndFooter } from "./js/htmlLoader.js";
-      import { setupHeaderLinks } from "./js/components.js";
+      import { setupFooterMetadata, setupHeaderLinks } from "./js/components.js";
       import { ProjectDetailPage } from "./js/projects/ProjectDetailPage.js";
       import { BASE_PATH } from "./js/config.js";
 
       try {
         await loadHeaderAndFooter(BASE_PATH);
         await setupHeaderLinks();
+        setupFooterMetadata();
         await import("./js/main.js");
         const projectDetailPage = new ProjectDetailPage();
         await projectDetailPage.init();

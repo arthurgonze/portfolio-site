@@ -15,8 +15,8 @@ Copyright (c) 2026 Arthur Gonze Machado
     <script type="importmap">
       {
         "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.155.0/build/three.module.js",
-          "three/addons/Stats": "https://cdn.jsdelivr.net/npm/three@0.155.0/examples/jsm/libs/stats.module.js"
+          "three": "https://cdn.jsdelivr.net/npm/three@0.182.0/build/three.module.js",
+          "three/addons/Stats": "https://cdn.jsdelivr.net/npm/three@0.182.0/examples/jsm/libs/stats.module.js"
         }
       }
     </script>
@@ -38,8 +38,6 @@ Copyright (c) 2026 Arthur Gonze Machado
           />
           <select id="project-filter-date" aria-label="Filter projects by date">
             <option value="all">All Dates</option>
-            <option value="2026">2026</option>
-            <option value="2025">2025</option>
           </select>
         </div>
 
@@ -51,12 +49,12 @@ Copyright (c) 2026 Arthur Gonze Machado
 
     <script type="module">
       import { loadHeaderAndFooter } from "./js/htmlLoader.js";
-      import { setupHeaderLinks, setupProjectLinks } from "./js/components.js";
+      import { setupFooterMetadata, setupHeaderLinks } from "./js/components.js";
       import { BASE_PATH } from "./js/config.js";
       try {
         await loadHeaderAndFooter(BASE_PATH);
         await setupHeaderLinks();
-        await setupProjectLinks();
+        setupFooterMetadata();
         await import("./js/main.js");
         await import("./js/projects.js");
       } catch (err) {

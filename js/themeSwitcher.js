@@ -6,45 +6,54 @@ import { themes } from "./background/ThemeRegistry.generated.js";
 /**
  * Populates the theme selector with the generated theme registry.
  * @param {HTMLSelectElement | null} selectElement
+ * @param {Record<string, { displayName?: string }>} [themeRegistry=themes]
  */
-export function populateThemeDropdown(selectElement) {
+export function populateThemeDropdown(selectElement, themeRegistry = themes) {
   if (!selectElement) {
     return;
   }
 
   selectElement.innerHTML = "";
-  for (const key of Object.keys(themes)) {
+  for (const key of Object.keys(themeRegistry)) {
     const opt = document.createElement("option");
     opt.value = key;
-    opt.textContent = themes[key].displayName || formatThemeName(key);
+    opt.textContent = themeRegistry[key].displayName || formatThemeName(key);
     selectElement.appendChild(opt);
   }
 }
 
 /**
  * Returns the persisted theme id, falling back to the default generated theme.
+ * @param {Record<string, unknown>} [themeRegistry=themes]
+ * @param {string} [storageKey="selectedTheme"]
+ * @param {string} [defaultThemeId="sunset"]
  * @returns {string}
  */
-export function getStoredTheme() {
+export function getStoredTheme(
+  themeRegistry = themes,
+  storageKey = "selectedTheme",
+  defaultThemeId = "sunset",
+) {
   try {
-    const saved = localStorage.getItem("selectedTheme");
-    if (saved && themes[saved]) {
+    const saved = localStorage.getItem(storageKey);
+    if (saved && themeRegistry[saved]) {
       return saved;
     }
   } catch (err) {
     console.warn("localStorage unavailable:", err);
   }
 
-  return themes.sunset ? "sunset" : Object.keys(themes)[0] || "";
+  return themeRegistry[defaultThemeId] ? defaultThemeId : Object.keys(themeRegistry)[0] || "";
 }
 
 /**
  * Persists the selected theme id in localStorage.
  * @param {string} themeName
+ * @param {string} [storageKey="selectedTheme"]
  */
-export function saveTheme(themeName) {
+export function saveTheme(themeName, storageKey = "selectedTheme") {
   try {
-    localStorage.setItem("selectedTheme", themeName);
+    localStorage.setItem(storageKey, themeName);
   } catch (err) {
     console.warn("failed to save theme:", err);
   }

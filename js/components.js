@@ -17,13 +17,54 @@ export function setupHeaderLinks() {
 }
 
 /**
- * Wires project cards to the reusable slug-based project detail page.
+ * Populates the footer with the current year and latest project update date.
+ * The footer stays static in markup while the dates are derived at runtime from
+ * the generated project registry.
  */
-export function setupProjectLinks() {
-  projects.forEach((project) => {
-    const link = document.getElementById(`project-${project.slug}`);
-    if (link) {
-      link.href = `${BASE_PATH}project.html?slug=${project.slug}`;
-    }
-  });
+export function setupFooterMetadata() {
+  const yearNode = document.getElementById("footer-year");
+  const updatedNode = document.getElementById("footer-last-updated");
+
+  if (yearNode) {
+    yearNode.textContent = String(new Date().getFullYear());
+  }
+
+  if (updatedNode) {
+    updatedNode.textContent = formatLatestProjectDate(projects);
+  }
+}
+
+/**
+ * Formats the most recent project date for the footer.
+ * @param {Array<{date?: string}>} projectList
+ * @returns {string}
+ */
+function formatLatestProjectDate(projectList) {
+  const latestDate = projectList
+    .map((project) => parseProjectDate(project.date))
+    .filter((date) => date !== null)
+    .sort((left, right) => right.getTime() - left.getTime())[0];
+
+  if (!latestDate) {
+    return new Intl.DateTimeFormat("en-US", {
+      month: "long",
+      year: "numeric",
+    }).format(new Date());
+  }
+
+  return `${new Intl.DateTimeFormat("en-US", { month: "long" }).format(latestDate)}, ${latestDate.getFullYear()}`;
+}
+
+/**
+ * Parses a project date string into a Date instance.
+ * @param {string | undefined} value
+ * @returns {Date | null}
+ */
+function parseProjectDate(value) {
+  if (typeof value !== "string" || !value.trim()) {
+    return null;
+  }
+
+  const parsed = new Date(`${value}T00:00:00`);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
 }
