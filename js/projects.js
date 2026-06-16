@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import { setupProjectLinks } from "./components.js";
-import { projects } from "./projectsData.js";
+import { projects } from "./projects/ProjectIndex.generated.js";
 
 const searchInput = document.getElementById("project-search");
 const dateFilter = document.getElementById("project-filter-date");
@@ -53,12 +53,12 @@ function renderProjectCards() {
 
   grid.innerHTML = projects
     .map(
-      (p) => `
-	<div class="project-item" data-project-name="${p.name}" data-project-date="${p.date}">
-		<a id="${p.id}">
-			<img src="${p.thumbnail}" alt="${p.name} Thumbnail" />
-			<h3>${p.name}</h3>
-			<p>${p.description}</p>
+      (project) => `
+	<div class="project-item" data-project-name="${project.title}" data-project-date="${project.date}">
+		<a id="project-${project.slug}">
+			<img src="${project.thumbnail}" alt="${project.title} Thumbnail" />
+			<h3>${project.title}</h3>
+			<p>${project.summary}</p>
 		</a>
 	</div>
 	`,

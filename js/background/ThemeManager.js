@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
-import { getThemeConfig, themes } from "../themeConfig.js";
+import { getThemeById, themes } from "./ThemeRegistry.generated.js";
 import {
   getStoredTheme,
   populateThemeDropdown,
@@ -103,7 +103,9 @@ export class ThemeManager {
    * @returns {Promise<ThemeInstance>}
    */
   async activateTheme(themeId, { persist = true } = {}) {
-    const themeDefinition = getThemeConfig(themeId) || this.themeRegistry[this.defaultThemeId];
+    const fallbackTheme =
+      this.themeRegistry[this.defaultThemeId] || Object.values(this.themeRegistry)[0];
+    const themeDefinition = getThemeById(themeId) || fallbackTheme;
     if (!themeDefinition) {
       throw new Error(`No theme registered for "${themeId}".`);
     }

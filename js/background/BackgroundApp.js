@@ -3,7 +3,7 @@
 import * as THREE from "three";
 import { CameraRig } from "./CameraRig.js";
 import { ThemeManager } from "./ThemeManager.js";
-import { themes } from "../themeConfig.js";
+import { themes } from "./ThemeRegistry.generated.js";
 
 /**
  * Owns the shared Three.js background lifecycle for the site.
