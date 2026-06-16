@@ -1,40 +1,35 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
-import { createTheme as createDvdScreensaverTheme, themeMeta as dvdScreensaverThemeMeta } from "./themes/dvdScreensaverTheme.js";
-import { createTheme as createFluid2dGasTheme, themeMeta as fluid2dGasThemeMeta } from "./themes/fluid2dGasTheme.js";
-import { createTheme as createOldTvNoiseTheme, themeMeta as oldTvNoiseThemeMeta } from "./themes/oldTvTheme.js";
-import { createTheme as createSunsetTheme, themeMeta as sunsetThemeMeta } from "./themes/retrowaveSunsetTheme.js";
+
+import {
+  getThemeById,
+  themeList,
+  themes as generatedThemes,
+} from "./background/ThemeRegistry.generated.js";
 
 /**
- * Manual background theme registry used by the Phase 1 runtime.
+ * Runtime adapter for the generated background theme registry.
+ *
+ * The generated file owns discovery and ordering; this module preserves the
+ * object-shaped lookup API used by the existing theme switcher and background
+ * manager.
  */
-export const themes = {
-  [sunsetThemeMeta.id]: {
-    ...sunsetThemeMeta,
-    displayName: sunsetThemeMeta.label,
-    createTheme: createSunsetTheme,
-  },
-  [oldTvNoiseThemeMeta.id]: {
-    ...oldTvNoiseThemeMeta,
-    displayName: oldTvNoiseThemeMeta.label,
-    createTheme: createOldTvNoiseTheme,
-  },
-  [dvdScreensaverThemeMeta.id]: {
-    ...dvdScreensaverThemeMeta,
-    displayName: dvdScreensaverThemeMeta.label,
-    createTheme: createDvdScreensaverTheme,
-  },
-  [fluid2dGasThemeMeta.id]: {
-    ...fluid2dGasThemeMeta,
-    displayName: fluid2dGasThemeMeta.label,
-    createTheme: createFluid2dGasTheme,
-  },
-};
+export const themes = generatedThemes;
+
+/**
+ * Ordered list of available themes.
+ */
+export { themeList };
 
 /**
  * Returns a theme definition by id, falling back to the default theme.
  * @param {string} themeName
+ * @returns {object | undefined}
  */
 export function getThemeConfig(themeName) {
-  return themes[themeName] || themes[sunsetThemeMeta.id];
+  return (
+    getThemeById(themeName) ||
+    generatedThemes.sunset ||
+    themeList[0]
+  );
 }
