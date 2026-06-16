@@ -14,7 +14,7 @@ export function setupHeaderLinks() {
 }
 
 /**
- * Wires project cards to the legacy detail pages or an override URL.
+ * Wires project cards to the reusable slug-based project detail page.
  */
 export function setupProjectLinks() {
   projects.forEach((project) => {
@@ -22,7 +22,7 @@ export function setupProjectLinks() {
     if (link) {
       link.href = project.detailUrl
         ? `${BASE_PATH}${project.detailUrl}`
-        : `${BASE_PATH}projects/${project.slug}.html`;
+        : `${BASE_PATH}project.html?slug=${project.slug}`;
     }
   });
 }
