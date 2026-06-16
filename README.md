@@ -112,6 +112,7 @@ export function createTheme(context) {
 
 - The site is static and has no backend
 - Generated registries are committed so GitHub Pages can serve the site directly
+- The repo includes a root `.nojekyll` marker so GitHub Pages serves `content/projects/*.md` as raw files
 - The app derives its base path from the current page URL, so local Live Server and GitHub Pages both work without changing code
 - If the repo is published under a different GitHub Pages path later, the code follows that path automatically
 
