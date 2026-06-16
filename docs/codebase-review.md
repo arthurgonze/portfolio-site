@@ -19,6 +19,7 @@ The remaining job for the web layer is to stay out of the way so project markdow
 - The Three.js version is aligned across `package.json`, `package-lock.json`, and the HTML import maps.
 - The projects page now renders direct project links when it builds the cards, so the extra link-patching step is gone.
 - The projects date filter now derives its options from the generated project metadata instead of hardcoded year entries in HTML.
+- The footer now fills its year and "last updated" label from generated project metadata instead of hardcoded text.
 - Theme persistence now uses the configured storage key instead of a hardcoded value, and `ThemeManager` now uses its injected registry directly.
 - The retro wave theme’s perspective camera is documented as intentional, so it reads as a theme-owned exception instead of accidental drift.
 

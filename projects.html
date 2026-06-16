@@ -49,11 +49,12 @@ Copyright (c) 2026 Arthur Gonze Machado
 
     <script type="module">
       import { loadHeaderAndFooter } from "./js/htmlLoader.js";
-      import { setupHeaderLinks } from "./js/components.js";
+      import { setupFooterMetadata, setupHeaderLinks } from "./js/components.js";
       import { BASE_PATH } from "./js/config.js";
       try {
         await loadHeaderAndFooter(BASE_PATH);
         await setupHeaderLinks();
+        setupFooterMetadata();
         await import("./js/main.js");
         await import("./js/projects.js");
       } catch (err) {

@@ -79,12 +79,13 @@ Copyright (c) 2026 Arthur Gonze Machado
     <!-- Load header/footer, then kick off main.js -->
     <script type="module">
       import { loadHeaderAndFooter } from "./js/htmlLoader.js";
-      import { setupHeaderLinks } from "./js/components.js";
+      import { setupFooterMetadata, setupHeaderLinks } from "./js/components.js";
       import { BASE_PATH } from "./js/config.js";
 
       try {
         await loadHeaderAndFooter(BASE_PATH);
         await setupHeaderLinks();
+        setupFooterMetadata();
         await import("./js/main.js");
       } catch (err) {
         console.error(err);
