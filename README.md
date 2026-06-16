@@ -114,5 +114,6 @@ export function createTheme(context) {
 - Generated registries are committed so GitHub Pages can serve the site directly
 - The repo includes a root `.nojekyll` marker so GitHub Pages serves `content/projects/*.md` as raw files
 - The app derives its base path from the current page URL, so local Live Server and GitHub Pages both work without changing code
+- The footer's "Last updated" label is generated from the latest git commit date when you run `npm run generate`
 - If the repo is published under a different GitHub Pages path later, the code follows that path automatically
 
