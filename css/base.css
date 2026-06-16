@@ -2,6 +2,39 @@
 SPDX-License-Identifier: MIT
 Copyright (c) 2026 Arthur Gonze Machado
 */
+:root {
+  --site-bg: #111;
+  --site-text: #eee;
+  --site-text-muted: #aaa;
+  --site-text-soft: #ccc;
+  --site-link: #00aaff;
+  --site-link-hover: #0088cc;
+  --site-surface: rgba(20, 20, 20, 0.9);
+  --site-surface-overlay: rgba(0, 0, 0, 0.6);
+  --site-surface-strong: #222;
+  --site-surface-border: #333;
+  --site-surface-border-soft: rgba(255, 255, 255, 0.1);
+  --site-surface-border-strong: #444;
+  --site-header-bg: rgba(10, 10, 10, 0.7);
+  --site-input-bg: #333;
+  --site-input-border: #555;
+  --site-button-bg: #00aaff;
+  --site-button-bg-hover: #0088cc;
+  --site-button-text: #fff;
+  --site-shadow-panel: 0 4px 20px rgba(0, 0, 0, 0.5);
+  --site-shadow-card: 0 5px 15px rgba(0, 0, 0, 0.3);
+  --site-shadow-card-hover: 0 8px 25px rgba(0, 0, 0, 0.4);
+  --site-radius-card: 8px;
+  --site-radius-button: 5px;
+  --site-max-width: 1200px;
+  --site-code-bg: rgba(0, 0, 0, 0.2);
+  --site-table-bg: rgba(0, 0, 0, 0.12);
+  --site-quote-bg: rgba(0, 0, 0, 0.18);
+  --site-mark-bg: rgba(0, 170, 255, 0.2);
+  --site-table-head-bg: rgba(0, 170, 255, 0.15);
+  --site-download-bg: rgba(0, 0, 0, 0.2);
+}
+
 *,
 *::before,
 *::after {
@@ -19,8 +52,8 @@ body {
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial,
     sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   line-height: 1.6;
-  color: #eee;
-  background-color: #111;
+  color: var(--site-text);
+  background-color: var(--site-bg);
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
@@ -28,7 +61,7 @@ body {
 }
 
 a {
-  color: #00aaff;
+  color: var(--site-link);
   text-decoration: none;
 }
 
@@ -65,14 +98,14 @@ footer {
   z-index: 1;
   text-align: center;
   padding: 20px;
-  color: #aaa;
+  color: var(--site-text-muted);
   font-size: 0.9em;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--site-surface-border-soft);
   width: 100%;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: var(--site-max-width);
   margin-left: auto;
   margin-right: auto;
   padding-left: 20px;
@@ -84,11 +117,11 @@ footer {
   top: 0;
   left: 0;
   width: 100%;
-  background-color: rgba(10, 10, 10, 0.7);
+  background-color: var(--site-header-bg);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   z-index: 100;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--site-surface-border-soft);
   transition: background-color 0.3s ease;
 }
 
@@ -105,7 +138,7 @@ footer {
 .logo {
   font-size: 1.1em;
   font-weight: 600;
-  color: #fff;
+  color: var(--site-button-text);
   text-decoration: none;
   white-space: nowrap;
   margin-right: 20px;
@@ -132,7 +165,7 @@ html {
 .main-nav a {
   font-size: 1.1em;
   font-weight: 600;
-  color: #eee;
+  color: var(--site-text);
   text-decoration: none;
   margin: 0 15px;
   padding: 5px 0;
@@ -143,12 +176,12 @@ html {
 }
 
 .main-nav a:hover {
-  color: #00aaff;
+  color: var(--site-link);
   text-decoration: none;
 }
 
 .main-nav a.active {
-  color: #fff;
+  color: var(--site-button-text);
 }
 
 .main-nav a.active::after {
@@ -158,7 +191,7 @@ html {
   left: 0;
   width: 100%;
   height: 2px;
-  background-color: #00aaff;
+  background-color: var(--site-link);
 }
 
 .theme-selector-container {
@@ -171,7 +204,7 @@ html {
   margin-right: 8px;
   font-size: 1.1em;
   font-weight: 600;
-  color: #eee;
+  color: var(--site-text);
   white-space: nowrap;
   line-height: 1;
 }
@@ -179,9 +212,9 @@ html {
 #theme-switcher {
   padding: 5px 8px;
   border-radius: 4px;
-  background-color: #333;
-  color: #eee;
-  border: 1px solid #555;
+  background-color: var(--site-input-bg);
+  color: var(--site-text);
+  border: 1px solid var(--site-input-border);
   font-size: 0.9em;
 }
 
@@ -197,10 +230,10 @@ html {
 
 .button {
   display: inline-block;
-  background-color: #00aaff;
-  color: #fff;
+  background-color: var(--site-button-bg);
+  color: var(--site-button-text);
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: var(--site-radius-button);
   text-decoration: none;
   font-weight: bold;
   border: none;
@@ -212,9 +245,9 @@ html {
 }
 
 .button:hover {
-  background-color: #0088cc;
+  background-color: var(--site-button-bg-hover);
   text-decoration: none;
-  color: #fff;
+  color: var(--site-button-text);
 }
 
 .button:active {
@@ -225,7 +258,7 @@ html {
   display: none;
   background: none;
   border: none;
-  color: #fff;
+  color: var(--site-button-text);
   font-size: 1.8em;
   cursor: pointer;
   padding: 5px;

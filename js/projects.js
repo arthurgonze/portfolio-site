@@ -1,16 +1,42 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
-import { setupProjectLinks } from "./components.js";
+import { BASE_PATH } from "./config.js";
 import { projects } from "./projects/ProjectIndex.generated.js";
 
 const searchInput = document.getElementById("project-search");
 const dateFilter = document.getElementById("project-filter-date");
 const projectGrid = document.querySelector(".project-grid");
-let projectItems = projectGrid
-  ? Array.from(projectGrid.querySelectorAll(".project-item"))
-  : [];
+let projectItems = [];
 
-// Function to filter and display projects
+populateDateFilter();
+renderProjectCards();
+
+if (searchInput) {
+  searchInput.addEventListener("input", filterProjects);
+}
+if (dateFilter) {
+  dateFilter.addEventListener("change", filterProjects);
+}
+
+function populateDateFilter() {
+  if (!dateFilter) {
+    return;
+  }
+
+  const years = Array.from(
+    new Set(
+      projects
+        .map((project) => getProjectYear(project.date))
+        .filter((year) => year !== ""),
+    ),
+  ).sort((left, right) => Number(right) - Number(left));
+
+  dateFilter.innerHTML = [
+    '<option value="all">All Dates</option>',
+    ...years.map((year) => `<option value="${year}">${year}</option>`),
+  ].join("");
+}
+
 function filterProjects() {
   if (!projectGrid) return;
 
@@ -23,11 +49,8 @@ function filterProjects() {
       : "";
     const projectDate = item.dataset.projectDate || "";
 
-    // --- Filtering Logic ---
-    // 1. Name Match
     const nameMatch = projectName.includes(searchTerm);
 
-    // 2. Date Match
     let dateMatch = false;
     if (selectedDate === "all") {
       dateMatch = true;
@@ -38,56 +61,52 @@ function filterProjects() {
       }
     }
 
-    // --- Show/Hide Item ---
-    if (nameMatch && dateMatch) {
-      item.style.display = "block";
-    } else {
-      item.style.display = "none";
-    }
+    item.hidden = !(nameMatch && dateMatch);
   });
 }
 
 function renderProjectCards() {
-  const grid = document.querySelector(".project-grid");
-  if (!grid) return;
+  if (!projectGrid) return;
 
-  grid.innerHTML = projects
+  projectGrid.innerHTML = projects
     .map(
       (project) => `
-	<div class="project-item" data-project-name="${project.title}" data-project-date="${project.date}">
-		<a id="project-${project.slug}">
-			<img src="${project.thumbnail}" alt="${project.title} Thumbnail" />
-			<h3>${project.title}</h3>
-			<p>${project.summary}</p>
-		</a>
-	</div>
-	`,
+      <article class="project-item" data-project-name="${escapeAttribute(project.title)}" data-project-date="${escapeAttribute(project.date || "")}">
+        <a href="${escapeAttribute(
+          `${BASE_PATH}project.html?slug=${encodeURIComponent(project.slug)}`,
+        )}">
+          <img src="${escapeAttribute(project.thumbnail || "")}" alt="${escapeAttribute(
+            `${project.title} Thumbnail`,
+          )}" />
+          <h3>${escapeHtml(project.title)}</h3>
+          <p>${escapeHtml(project.summary)}</p>
+        </a>
+      </article>
+      `,
     )
     .join("");
 
-  setupProjectLinks();
-  projectItems = projectGrid
-    ? Array.from(projectGrid.querySelectorAll(".project-item"))
-    : [];
+  projectItems = Array.from(projectGrid.querySelectorAll(".project-item"));
+  filterProjects();
 }
 
-// --- Event Listeners ---
-if (searchInput) {
-  searchInput.addEventListener("input", filterProjects);
-}
-if (dateFilter) {
-  dateFilter.addEventListener("change", filterProjects);
+function getProjectYear(dateValue) {
+  if (typeof dateValue !== "string" || dateValue.length < 4) {
+    return "";
+  }
+
+  return dateValue.slice(0, 4);
 }
 
-// --- Safety Check ---
-if (projectItems.length === 0) {
-  console.warn("No project items found for filtering.");
-}
-if (!searchInput) {
-  console.warn("Search input #project-search not found.");
-}
-if (!dateFilter) {
-  console.warn("Date filter #project-filter-date not found.");
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
-renderProjectCards();
+function escapeAttribute(value) {
+  return escapeHtml(value).replace(/`/g, "&#96;");
+}

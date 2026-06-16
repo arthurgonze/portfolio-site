@@ -7,13 +7,13 @@ Copyright (c) 2026 Arthur Gonze Machado
   top: 20%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--site-surface-overlay);
   padding: 24px 32px;
-  border-radius: 8px;
+  border-radius: var(--site-radius-card);
   max-width: 600px;
   width: calc(100% - 40px);
-  color: #eee;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  color: var(--site-text);
+  box-shadow: var(--site-shadow-panel);
   transition: all 0.3s ease;
 }
 
@@ -34,7 +34,7 @@ Copyright (c) 2026 Arthur Gonze Machado
 }
 
 .welcome-panel .links a {
-  color: #00aaff;
+  color: var(--site-link);
   text-decoration: none;
   font-weight: 600;
   margin-right: 12px;
@@ -52,7 +52,7 @@ Copyright (c) 2026 Arthur Gonze Machado
   height: 32px;
   border: none;
   background: rgba(0, 0, 0, 0.8);
-  color: #fff;
+  color: var(--site-button-text);
   font-size: 1.2em;
   line-height: 1;
   border-radius: 50%;

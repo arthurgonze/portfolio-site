@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
-import { getThemeById, themes } from "./ThemeRegistry.generated.js";
+import { themes } from "./ThemeRegistry.generated.js";
 import {
   getStoredTheme,
   populateThemeDropdown,
@@ -39,6 +39,10 @@ import { showToast } from "../utils/errorHandling.js";
 
 /**
  * Manages available background themes, persistence, and the active theme lifecycle.
+ *
+ * The manager prefers the shared orthographic camera by default, but a theme
+ * may intentionally expose its own `camera` to opt out when the composition
+ * needs a different projection.
  */
 export class ThemeManager {
   /**
@@ -87,11 +91,15 @@ export class ThemeManager {
    */
   async init() {
     if (this.themeSelect) {
-      populateThemeDropdown(this.themeSelect);
+      populateThemeDropdown(this.themeSelect, this.themeRegistry);
       this.themeSelect.addEventListener("change", this._boundThemeChange);
     }
 
-    const initialThemeId = getStoredTheme();
+    const initialThemeId = getStoredTheme(
+      this.themeRegistry,
+      this.storageKey,
+      this.defaultThemeId,
+    );
     await this.activateTheme(initialThemeId, { persist: false });
   }
 
@@ -105,7 +113,7 @@ export class ThemeManager {
   async activateTheme(themeId, { persist = true } = {}) {
     const fallbackTheme =
       this.themeRegistry[this.defaultThemeId] || Object.values(this.themeRegistry)[0];
-    const themeDefinition = getThemeById(themeId) || fallbackTheme;
+    const themeDefinition = this.themeRegistry[themeId] || fallbackTheme;
     if (!themeDefinition) {
       throw new Error(`No theme registered for "${themeId}".`);
     }
@@ -117,7 +125,7 @@ export class ThemeManager {
         this.themeSelect.value = resolvedThemeId;
       }
       if (persist) {
-        saveTheme(resolvedThemeId);
+        saveTheme(resolvedThemeId, this.storageKey);
       }
       return this.activeTheme;
     }
@@ -138,7 +146,7 @@ export class ThemeManager {
         this.themeSelect.value = resolvedThemeId;
       }
       if (persist) {
-        saveTheme(resolvedThemeId);
+        saveTheme(resolvedThemeId, this.storageKey);
       }
 
       return nextTheme;

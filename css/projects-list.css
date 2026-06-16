@@ -14,15 +14,15 @@ Copyright (c) 2026 Arthur Gonze Machado
 #project-search,
 #project-filter-date {
   padding: 10px 15px;
-  border-radius: 5px;
-  border: 1px solid #555;
-  background-color: #333;
-  color: #eee;
+  border-radius: var(--site-radius-button);
+  border: 1px solid var(--site-input-border);
+  background-color: var(--site-input-bg);
+  color: var(--site-text);
   font-size: 1em;
 }
 
 #project-search::placeholder {
-  color: #aaa;
+  color: var(--site-text-muted);
 }
 
 #project-search {
@@ -34,7 +34,7 @@ Copyright (c) 2026 Arthur Gonze Machado
 }
 
 .projects-main {
-  max-width: 1200px;
+  max-width: var(--site-max-width);
   margin: 0 auto;
   padding: 20px;
 }
@@ -53,26 +53,26 @@ Copyright (c) 2026 Arthur Gonze Machado
 }
 
 .project-item {
-  background-color: #222;
-  border-radius: 8px;
+  background-color: var(--site-surface-strong);
+  border-radius: var(--site-radius-card);
   overflow: hidden;
   width: calc(33.333% - 20px);
   min-width: 280px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--site-shadow-card);
   transition:
     transform 0.3s ease,
     box-shadow 0.3s ease;
-  border: 1px solid #333;
+  border: 1px solid var(--site-surface-border);
 }
 
 .project-item:hover {
   transform: translateY(-5px) scale(1.02);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--site-shadow-card-hover);
 }
 
 .project-item a {
   text-decoration: none;
-  color: #eee;
+  color: var(--site-text);
   display: block;
 }
 
@@ -84,20 +84,20 @@ Copyright (c) 2026 Arthur Gonze Machado
   width: 100%;
   height: 200px;
   object-fit: cover;
-  border-bottom: 1px solid #333;
+  border-bottom: 1px solid var(--site-surface-border);
 }
 
 .project-item h3 {
   margin: 15px 15px 10px 15px;
   font-size: 1.25em;
-  color: #fff;
+  color: var(--site-button-text);
 }
 
 .project-item p {
   margin: 0 15px 15px 15px;
   font-size: 0.95em;
   line-height: 1.5;
-  color: #ccc;
+  color: var(--site-text-soft);
 }
 
 @media (max-width: 992px) {

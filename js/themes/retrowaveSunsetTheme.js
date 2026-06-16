@@ -171,6 +171,9 @@ function createGradientSky() {
   );
 }
 
+/**
+ * Retrowave sunset background that intentionally owns a perspective camera.
+ */
 class RetrowaveSunsetTheme extends ShaderThemeBase {
   /**
    * @param {object} context
@@ -178,6 +181,8 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
   constructor(context) {
     super(context, themeMeta.id);
 
+    // Intentional exception: this theme keeps its own perspective camera so the
+    // horizon composition reads correctly under the shared renderer.
     this.camera = new THREE.PerspectiveCamera(
       75,
       context.viewport.aspect,
