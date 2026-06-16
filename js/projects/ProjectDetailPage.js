@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 
-import { getProjectBySlug } from "./ProjectIndex.manual.js";
+import { getProjectBySlug } from "./ProjectIndex.generated.js";
 import { loadMarkdownDocument, renderMarkdown } from "./MarkdownRenderer.js";
 
 /**
@@ -35,7 +35,10 @@ export class ProjectDetailPage {
 
     const project = getProjectBySlug(slug);
     if (!project) {
-      this._renderError(`Unknown project slug: ${slug}.`, "No markdown project is registered for this slug.");
+      this._renderError(
+        `Unknown project slug: ${slug}.`,
+        "No markdown project is registered for this slug.",
+      );
       return;
     }
 
@@ -44,7 +47,7 @@ export class ProjectDetailPage {
     try {
       const markdownUrl = new URL(project.markdownPath, window.location.href).href;
       const { frontMatter, body } = await loadMarkdownDocument(markdownUrl);
-      const viewModel = this._buildViewModel(slug, frontMatter);
+      const viewModel = this._buildViewModel(project, frontMatter);
       this._renderProject(viewModel, body);
     } catch (error) {
       console.error(`Failed to load project "${slug}":`, error);
@@ -65,7 +68,17 @@ export class ProjectDetailPage {
 
   /**
    * Builds a normalized view model for the rendered project page.
-   * @param {string} fallbackSlug
+   * @param {{
+   *   slug: string,
+   *   title: string,
+   *   summary: string,
+   *   date: string,
+   *   type: string,
+   *   tags: string[],
+   *   thumbnail: string,
+   *   heroImage: string,
+   *   heroAlt: string,
+   * }} project
    * @param {Record<string, unknown>} frontMatter
    * @returns {{
    *   slug: string,
@@ -78,24 +91,25 @@ export class ProjectDetailPage {
    *   heroAlt: string,
    * }}
    */
-  _buildViewModel(fallbackSlug, frontMatter) {
-    const title = typeof frontMatter.title === "string" && frontMatter.title.trim()
-      ? frontMatter.title.trim()
-      : formatSlug(fallbackSlug);
-    const summary =
-      typeof frontMatter.summary === "string" ? frontMatter.summary.trim() : "";
-    const type = typeof frontMatter.type === "string" ? frontMatter.type.trim() : "";
-    const tags = Array.isArray(frontMatter.tags)
-      ? frontMatter.tags.filter((tag) => typeof tag === "string").map((tag) => tag.trim()).filter(Boolean)
-      : [];
+  _buildViewModel(project, frontMatter) {
+    const title = pickString(frontMatter.title) || project.title || formatSlug(project.slug);
+    const summary = pickString(frontMatter.summary) || project.summary || "";
+    const type = pickString(frontMatter.type) || project.type || "";
+    const tags = normalizeStringArray(frontMatter.tags, project.tags);
     const heroImage =
-      pickString(frontMatter.heroImage) || pickString(frontMatter.image) || pickString(frontMatter.thumbnail);
+      pickString(frontMatter.heroImage) ||
+      pickString(frontMatter.image) ||
+      project.heroImage ||
+      project.thumbnail ||
+      "";
     const heroAlt =
-      pickString(frontMatter.heroAlt) || `${title} preview`;
-    const dateLabel = formatProjectDate(frontMatter.date);
+      pickString(frontMatter.heroAlt) ||
+      project.heroAlt ||
+      `${title} preview`;
+    const dateLabel = formatProjectDate(frontMatter.date || project.date);
 
     return {
-      slug: fallbackSlug,
+      slug: project.slug,
       title,
       summary,
       dateLabel,
@@ -165,6 +179,21 @@ export class ProjectDetailPage {
 
 function pickString(value) {
   return typeof value === "string" && value.trim() ? value.trim() : "";
+}
+
+function normalizeStringArray(primaryValue, fallbackValue = []) {
+  const normalizedPrimary = toStringArray(primaryValue);
+  if (normalizedPrimary.length > 0) {
+    return normalizedPrimary;
+  }
+
+  return toStringArray(fallbackValue);
+}
+
+function toStringArray(value) {
+  return Array.isArray(value)
+    ? value.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean)
+    : [];
 }
 
 function formatSlug(slug) {
