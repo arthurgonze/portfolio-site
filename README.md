@@ -112,6 +112,6 @@ export function createTheme(context) {
 
 - The site is static and has no backend
 - Generated registries are committed so GitHub Pages can serve the site directly
-- Local development uses `/`
-- GitHub Pages serves the site from `/portfolio-site/`
+- The app derives its base path from the current page URL, so local Live Server and GitHub Pages both work without changing code
+- If the repo is published under a different GitHub Pages path later, the code follows that path automatically
 
