@@ -115,8 +115,3 @@ export function createTheme(context) {
 - Local development uses `/`
 - GitHub Pages serves the site from `/portfolio-site/`
 
-## Notes for Agents
-
-- Update source files, not generated files
-- Keep project additions markdown-driven
-- Keep shader additions limited to `js/themes/` and rerun the generator
