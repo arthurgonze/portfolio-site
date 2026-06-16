@@ -1,8 +1,8 @@
 local project_root = vim.fn.getcwd()
 
 vim.keymap.set("n", "<leader>Ls", function()
-	vim.cmd("split | terminal live-server --port=8080 --browser=chrome")
-	vim.notify("Live server started at http://localhost:8080", vim.log.levels.INFO)
+	vim.cmd("split | terminal live-server --port=8081 --browser=chrome")
+	vim.notify("Live server started at http://localhost:8081", vim.log.levels.INFO)
 end, { desc = "[L]ive [S]erver start" })
 
 vim.keymap.set("n", "<leader>Lk", function()
