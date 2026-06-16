@@ -1,8 +1,11 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Arthur Gonze Machado
 import { BASE_PATH } from "./config.js";
-import { projects } from "./projectsData.js";
+import { projects } from "./projects/ProjectIndex.generated.js";
 
+/**
+ * Wires the shared header navigation to the current base path.
+ */
 export function setupHeaderLinks() {
   const homeLink = document.getElementById("home-link");
   const navHome = document.getElementById("nav-home");
@@ -18,11 +21,9 @@ export function setupHeaderLinks() {
  */
 export function setupProjectLinks() {
   projects.forEach((project) => {
-    const link = document.getElementById(project.id);
+    const link = document.getElementById(`project-${project.slug}`);
     if (link) {
-      link.href = project.detailUrl
-        ? `${BASE_PATH}${project.detailUrl}`
-        : `${BASE_PATH}project.html?slug=${project.slug}`;
+      link.href = `${BASE_PATH}project.html?slug=${project.slug}`;
     }
   });
 }
