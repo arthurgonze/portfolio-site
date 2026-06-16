@@ -9,6 +9,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const GENERATED_HEADER =
@@ -30,6 +31,7 @@ const generatedThemeRegistryPath = path.join(
   "background",
   "ThemeRegistry.generated.js",
 );
+const generatedSiteMetaPath = path.join(repoRoot, "js", "siteMeta.generated.js");
 
 main().catch((error) => {
   console.error(error instanceof Error ? error.message : error);
@@ -39,11 +41,55 @@ main().catch((error) => {
 async function main() {
   const projects = readProjectMarkdownFiles(projectContentDir);
   const themes = readThemeModules(themeSourceDir);
+  const siteMeta = readSiteMeta(repoRoot);
 
   writeFileIfChanged(generatedProjectIndexPath, serializeProjectIndex(projects));
   writeFileIfChanged(generatedThemeRegistryPath, serializeThemeRegistry(themes));
+  writeFileIfChanged(generatedSiteMetaPath, serializeSiteMeta(siteMeta));
 
-  console.log(`Generated ${projects.length} project registry entr${projects.length === 1 ? "y" : "ies"} and ${themes.length} theme entr${themes.length === 1 ? "y" : "ies"}.`);
+  console.log(
+    `Generated ${projects.length} project registry entr${projects.length === 1 ? "y" : "ies"}, ${themes.length} theme entr${themes.length === 1 ? "y" : "ies"}, and site metadata.`,
+  );
+}
+
+/**
+ * Reads site-wide generated metadata from the current git revision.
+ * @param {string} cwd
+ * @returns {{ lastUpdatedIso: string }}
+ */
+function readSiteMeta(cwd) {
+  const lastUpdatedIso = getLatestCommitIsoDate(cwd);
+  return { lastUpdatedIso };
+}
+
+/**
+ * Returns the ISO timestamp of the latest commit.
+ * @param {string} cwd
+ * @returns {string}
+ */
+function getLatestCommitIsoDate(cwd) {
+  try {
+    const output = execFileSync("git", ["log", "-1", "--format=%cI"], {
+      cwd,
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    }).trim();
+
+    if (!output) {
+      throw new Error("Git returned an empty commit timestamp.");
+    }
+
+    const parsed = new Date(output);
+    if (Number.isNaN(parsed.getTime())) {
+      throw new Error(`Git returned an invalid commit timestamp: ${output}`);
+    }
+
+    return output;
+  } catch (error) {
+    throw new Error(
+      `Could not determine the latest commit date for the footer. ${error instanceof Error ? error.message : String(error)}`,
+    );
+  }
 }
 
 /**
@@ -538,6 +584,22 @@ function serializeThemeRegistry(themes) {
     "export function getThemeById(themeId) {",
     "  return themes[themeId] || null;",
     "}",
+    "",
+  ].join("\n");
+}
+
+/**
+ * Serializes the generated site metadata module.
+ * @param {{ lastUpdatedIso: string }} siteMeta
+ * @returns {string}
+ */
+function serializeSiteMeta(siteMeta) {
+  return [
+    GENERATED_HEADER,
+    "",
+    "export const siteMeta = {",
+    `  lastUpdatedIso: ${JSON.stringify(siteMeta.lastUpdatedIso)},`,
+    "};",
     "",
   ].join("\n");
 }
