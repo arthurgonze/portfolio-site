@@ -34,5 +34,6 @@ export const projects = [
     description:
       "Exploring virtual reality interactions directly in the web browser.",
     thumbnail: "https://placehold.co/300x200/ff9900/white?text=WebVR+Exp",
+    detailUrl: "project.html?slug=webvr-experiment",
   },
 ];
