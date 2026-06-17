@@ -22,7 +22,6 @@ export function createTheme(context) {
 
 // Each shader below maps to a single stage in the fluid pipeline:
 // advection, divergence, pressure solve, gradient subtraction, splat, display.
-// L/R/T/B always means left/right/top/bottom neighbor samples.
 const SHADERS = {
   vertex: {
     simple: `
@@ -36,15 +35,14 @@ const SHADERS = {
     advection: `
 	precision mediump float;
 	uniform sampler2D uVelocity, uSource;
-	uniform float uTexelSize, uTimeStep, uDissipation;
+	uniform float uTexelSize, uDt, uDissipation;
 	varying vec2 vUv;
 
 	void main() {
-		vec2 velocity = texture2D(uVelocity, vUv).xy;
-		vec2 backtracedUv = vUv - uTimeStep * velocity * uTexelSize;
-		// Clamp the backtraced samples to the texel domain before reading.
-		backtracedUv = clamp(backtracedUv, vec2(uTexelSize), vec2(1.0 - uTexelSize));
-		gl_FragColor = uDissipation * texture2D(uSource, backtracedUv);
+		vec2 vel = texture2D(uVelocity, vUv).xy;
+		vec2 coord = vUv - uDt * vel * uTexelSize;
+		coord = clamp(coord, vec2(uTexelSize), vec2(1.0 - uTexelSize));
+		gl_FragColor = uDissipation * texture2D(uSource, coord);
 	} `,
     divergence: `
 	precision mediump float;
@@ -57,8 +55,7 @@ const SHADERS = {
 		float R = texture2D(uVelocity, vUv + vec2(uTexelSize, 0.0)).x;
 		float T = texture2D(uVelocity, vUv + vec2(0.0, uTexelSize)).y;
 		float B = texture2D(uVelocity, vUv - vec2(0.0, uTexelSize)).y;
-		float divergence = 0.5 * (R - L + T - B);
-		gl_FragColor = vec4(divergence, 0.0, 0.0, 1.0);
+		gl_FragColor = vec4(0.5 * (R - L + T - B), 0.0, 0.0, 1.0);
 	} `,
     jacobi: `
 	precision mediump float;
@@ -71,8 +68,8 @@ const SHADERS = {
 		float R = texture2D(uPressure, vUv + vec2(uTexelSize, 0.0)).x;
 		float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize)).x;
 		float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize)).x;
-		float divergence = texture2D(uDivergence, vUv).x;
-		gl_FragColor = vec4((L + R + B + T - divergence) * 0.25, 0.0, 0.0, 1.0);
+		float C = texture2D(uDivergence, vUv).x;
+		gl_FragColor = vec4((L + R + B + T - C) * 0.25, 0.0, 0.0, 1.0);
 	}`,
 
     gradient: `
@@ -87,9 +84,9 @@ const SHADERS = {
 		float T = texture2D(uPressure, vUv + vec2(0.0, uTexelSize)).x;
 		float B = texture2D(uPressure, vUv - vec2(0.0, uTexelSize)).x;
 
-		vec2 correctedVelocity = texture2D(uVelocity, vUv).xy;
-		correctedVelocity -= 0.5 * vec2(R - L, T - B);
-		gl_FragColor = vec4(correctedVelocity, 0.0, 1.0);
+		vec2 velocity = texture2D(uVelocity, vUv).xy;
+		velocity -= 0.5 * vec2(R - L, T - B);
+		gl_FragColor = vec4(velocity, 0.0, 1.0);
 	}`,
 
     splat: `
@@ -101,12 +98,11 @@ const SHADERS = {
 	varying vec2 vUv;
 
 	void main() {
-		vec4 baseColor = texture2D(uTarget, vUv);
-		vec2 offset = vUv - uPoint;
-		float distanceToCenter = length(offset);
-		// Gaussian falloff keeps each splat soft at the edges.
-		float falloff = exp(-distanceToCenter * distanceToCenter / (uRadius * uRadius));
-		gl_FragColor = vec4(baseColor.rgb + falloff * uColor, 1.0);
+		vec4 base = texture2D(uTarget, vUv);
+		vec2 diff = vUv - uPoint;
+		float d = length(diff);
+		float splat = exp(-d * d / (uRadius * uRadius));
+		gl_FragColor = vec4(base.rgb + splat * uColor, 1.0);
 	}`,
 
     display: `
@@ -118,21 +114,21 @@ const SHADERS = {
 	varying vec2 vUv;
 
 	void main() {
-		vec4 fieldSample = texture2D(uTexture, vUv);
-		vec3 displayColor;
+		vec4 data = texture2D(uTexture, vUv);
+		vec3 color;
 
 		if (uDebugMode == 1) {
-			vec2 velocity = fieldSample.xy;
-			float velocityMagnitude = length(velocity);
-			displayColor = vec3(
-				velocity.x * 0.5 + 0.5,
-				velocity.y * 0.5 + 0.5,
-				velocityMagnitude
+			vec2 vel = data.xy;
+			float speed = length(vel);
+			color = vec3(
+				vel.x * 0.5 + 0.5,
+				vel.y * 0.5 + 0.5,
+				speed
 			);
 		} else {
-			displayColor = pow(fieldSample.rgb, vec3(1.2)) * 2.0;
+			color = pow(data.rgb, vec3(1.2)) * 2.0;
 		}
-		gl_FragColor = vec4(displayColor, 1.0);
+		gl_FragColor = vec4(color, 1.0);
 	}`,
   },
 };
@@ -310,7 +306,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
             uVelocity: { value: null },
             uSource: { value: null },
             uTexelSize: { value: this.texelSize },
-            uTimeStep: { value: 0.001 },
+            uDt: { value: 0.001 },
             uDissipation: { value: 0.99 },
           },
           vertexShader: simVertex,
@@ -422,7 +418,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
   advect(source, velocity, dt, dissipation) {
     this.advectionUniforms.uVelocity.value = velocity.read.texture;
     this.advectionUniforms.uSource.value = source.read.texture;
-    this.advectionUniforms.uTimeStep.value = dt;
+    this.advectionUniforms.uDt.value = dt;
     this.advectionUniforms.uDissipation.value = dissipation;
     this.renderToTarget(source.write, this.shaders.advection);
     source.swap();
@@ -542,11 +538,11 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    * @private
    */
   project() {
-    // Divergence measures how much velocity is flowing in or out of each cell.
+    // Divergence is the source term for the pressure solve.
     this.divergenceUniforms.uVelocity.value = this.fields.velocity.read.texture;
     this.renderToTarget(this.fields.divergence, this.shaders.divergence);
 
-    // Jacobi iterations relax the pressure field toward the divergence source.
+    // Jacobi iterations approximate the pressure field.
     this.renderer.setRenderTarget(this.fields.pressure.read);
     this.renderer.clear();
     this.renderer.setRenderTarget(this.fields.pressure.write);
@@ -597,19 +593,18 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    * @private
    */
   simulationStep(time, dt) {
-    // Cap the timestep so the solver stays stable on slow frames.
-    const cappedDt = Math.min(dt, 0.016);
+    const frameDt = Math.min(dt, 0.016);
     // User and ambient impulses feed the velocity and density fields first.
     this.applyForces(time);
 
     // Carry velocity forward before the pressure solve so motion stays coherent.
-    this.advect(this.fields.velocity, this.fields.velocity, cappedDt, this.config.velocityDissipation);
+    this.advect(this.fields.velocity, this.fields.velocity, frameDt, this.config.velocityDissipation);
 
     // Solve the pressure field to remove divergence from the velocity field.
     this.project();
 
     // Density follows the updated velocity field.
-    this.updateDensity(cappedDt);
+    this.updateDensity(frameDt);
 
     // The display pass selects either the density or debug velocity view.
     this.updateDisplay(time);
