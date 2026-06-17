@@ -22,6 +22,8 @@ export function createTheme(context) {
 }
 
 // ---- Terrain shaders ----
+// The terrain is a deformed road plane; the fragment shader adds the grid and
+// distance fog that sell the retro perspective shot.
 const vertexShader = `
 	precision mediump float;
 
@@ -51,20 +53,21 @@ const vertexShader = `
 
 	void main() {
 		vUv = uv;
-		vec2 scrollUV = vec2(uv.x, uv.y + time * uSpeed) * uNoiseFrequency;
-		float n = pow(noise_2D(scrollUV), 2.5);
-		float roadFactor = smoothstep(0.0, 1.0, abs(position.x) / uRoadWidth);
-		vec3 pos = position;
-		pos.z += n * uWaveHeight * roadFactor;
-		vec4 worldPos = modelMatrix * vec4(pos, 1.0);
-		vWorldPosition = worldPos.xyz;
-		gl_Position = projectionMatrix * viewMatrix * worldPos;
+		vec2 terrainNoiseUv = vec2(uv.x, uv.y + time * uSpeed) * uNoiseFrequency;
+		// Shape the noise so the road undulates without becoming too chaotic.
+		float terrainNoise = pow(noise_2D(terrainNoiseUv), 2.5);
+		float roadMask = smoothstep(0.0, 1.0, abs(position.x) / uRoadWidth);
+		vec3 deformedPosition = position;
+		deformedPosition.z += terrainNoise * uWaveHeight * roadMask;
+		vec4 worldPosition = modelMatrix * vec4(deformedPosition, 1.0);
+		vWorldPosition = worldPosition.xyz;
+		gl_Position = projectionMatrix * viewMatrix * worldPosition;
 	}`;
 
 const fragmentShader = `
-	uniform float uFogStart;
-	uniform float uFogEnd;
-	uniform vec3  uFogColor;
+	uniform float uFogNearZ;
+	uniform float uFogFarZ;
+	uniform vec3  uFogTint;
 
 	precision mediump float;
 
@@ -76,25 +79,33 @@ const fragmentShader = `
 
 	varying vec3 vWorldPosition;
 
-	float drawGrid(vec2 c, float w) {
-		vec2 grid = abs(fract(c) - 0.5);
-		vec2 d    = fwidth(c);
-		vec2 lines= smoothstep(d * (w - 0.5), d * (w + 0.5), grid);
-		return 1.0 - min(lines.x, lines.y);
+	float drawGrid(vec2 gridUv, float lineWidth) {
+		vec2 cellDistance = abs(fract(gridUv) - 0.5);
+		// Use fwidth so the grid stays anti-aliased as it recedes.
+		vec2 antiAliasWidth = fwidth(gridUv);
+		vec2 lineCoverage = smoothstep(
+			antiAliasWidth * (lineWidth - 0.5),
+			antiAliasWidth * (lineWidth + 0.5),
+			cellDistance
+		);
+		return 1.0 - min(lineCoverage.x, lineCoverage.y);
 	}
 
 	void main() {
-		vec2 coord = vWorldPosition.xz / uGridStep;
-		coord.y -= time * 0.5;
-		float g = drawGrid(coord, uGridLineWidth);
-		vec3 color = mix(uBaseColor, uGridColor, g);
-		vec4 base = vec4(color, 1.0);
-		float f = smoothstep(uFogStart, uFogEnd, vWorldPosition.z);
-		vec3 finalCol = mix(base.rgb, uFogColor, f);
-		gl_FragColor = vec4(finalCol, 1.0);
+		vec2 gridCoords = vWorldPosition.xz / uGridStep;
+		gridCoords.y -= time * 0.5;
+		float gridMask = drawGrid(gridCoords, uGridLineWidth);
+		vec3 baseColor = mix(uBaseColor, uGridColor, gridMask);
+		vec4 terrainColor = vec4(baseColor, 1.0);
+		// More negative Z is farther away, so fog grows as the road recedes.
+		float fogAmount = 1.0 - smoothstep(uFogFarZ, uFogNearZ, vWorldPosition.z);
+		vec3 finalColor = mix(terrainColor.rgb, uFogTint, fogAmount);
+		gl_FragColor = vec4(finalColor, 1.0);
 	}`;
 
 // ---- Sun shader ----
+// The sun is a separate decorative mesh so the stripes, glow, and disc mask can
+// be tuned independently from the terrain.
 function createRadialStripedSun() {
   const uniforms = {
     time: { value: 0 },
@@ -128,25 +139,26 @@ function createRadialStripedSun() {
 	varying vec2 vUv;
 
 	void main() {
-		vec2 c = vUv - 0.5;
-		float r = length(c);
-		float mask = smoothstep(0.5, 0.48, r);
-		float m = mod(vUv.y * uStripeCount + time * 0.2, 1.0);
-		float stripe = step(uStripeThickness, m);
-		float region = smoothstep(uStripeStart - 0.01, uStripeStart + 0.01, vUv.y);
-		float faded = 1.0 - stripe * uStripeFade;
-		float stripeAlpha = mix(faded, 1.0, region);
-		vec3 baseCol = mix(uBottomColor, uTopColor, vUv.y);
-		float glowMask = clamp((uGlowRadius - r) / (uGlowRadius - 0.5), 0.0, 1.0);
+		vec2 sunCenter = vUv - 0.5;
+		float radius = length(sunCenter);
+		float discMask = 1.0 - smoothstep(0.48, 0.5, radius);
+		// Modulo keeps the stripes looping, step carves out each band.
+		float stripePhase = mod(vUv.y * uStripeCount + time * 0.2, 1.0);
+		float stripeMask = step(uStripeThickness, stripePhase);
+		float stripeBlend = smoothstep(uStripeStart - 0.01, uStripeStart + 0.01, vUv.y);
+		float stripeAlpha = mix(1.0 - stripeMask * uStripeFade, 1.0, stripeBlend);
+		vec3 baseColor = mix(uBottomColor, uTopColor, vUv.y);
+		float glowMask = clamp((uGlowRadius - radius) / (uGlowRadius - 0.5), 0.0, 1.0);
 		float glowAlpha = glowMask * uGlowIntensity;
-		vec4 glowCol = vec4(uGlowColor, glowAlpha);
-		vec4 sunCol = vec4(baseCol, mask * stripeAlpha);
-		gl_FragColor = mix(glowCol, sunCol, mask);
+		vec4 glowColor = vec4(uGlowColor, glowAlpha);
+		vec4 sunColor = vec4(baseColor, discMask * stripeAlpha);
+		gl_FragColor = mix(glowColor, sunColor, discMask);
 	}`,
   });
 }
 
 // ---- Gradient sky ----
+// The sky is baked once into a canvas texture so the background stays cheap.
 function createGradientSky() {
   const canvas = document.createElement("canvas");
   canvas.width = 2;
@@ -208,9 +220,9 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
         uGridLineWidth: { value: 0.5 },
         uGridColor: { value: new THREE.Color("#ff00aa") },
         uBaseColor: { value: new THREE.Color("#1b0044") },
-        uFogStart: { value: -120.0 },
-        uFogEnd: { value: -130.0 },
-        uFogColor: { value: new THREE.Color(0.8, 0.8, 0.85) },
+        uFogNearZ: { value: -120.0 },
+        uFogFarZ: { value: -130.0 },
+        uFogTint: { value: new THREE.Color(0.8, 0.8, 0.85) },
       },
       side: THREE.DoubleSide,
     });
@@ -228,24 +240,26 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
     sun.position.set(0, 20, -150);
     this.add(sun);
 
+    // The baked sky keeps the background readable without another shader pass.
     this.add(createGradientSky());
 
-    const starGeo = new THREE.BufferGeometry();
+    const starGeometry = new THREE.BufferGeometry();
     const starCount = 500;
-    const starsPos = new Float32Array(starCount * 3);
-    const roadW = 1;
-    const spreadX = 500;
+    const starPositions = new Float32Array(starCount * 3);
+    const roadHalfWidth = 1;
+    const starSpreadX = 500;
+    // Keep stars out of the road corridor so the center line stays open.
     for (let i = 0; i < starCount; i++) {
       let x;
       do {
-        x = (Math.random() * 2 - 1) * spreadX;
-      } while (Math.abs(x) < roadW);
-      starsPos[3 * i + 0] = x;
-      starsPos[3 * i + 1] = Math.random() * 100 + 10;
-      starsPos[3 * i + 2] = -140 - Math.random() * 300;
+        x = (Math.random() * 2 - 1) * starSpreadX;
+      } while (Math.abs(x) < roadHalfWidth);
+      starPositions[3 * i + 0] = x;
+      starPositions[3 * i + 1] = Math.random() * 100 + 10;
+      starPositions[3 * i + 2] = -140 - Math.random() * 300;
     }
-    starGeo.setAttribute("position", new THREE.BufferAttribute(starsPos, 3));
-    const starMat = new THREE.PointsMaterial({
+    starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+    const starMaterial = new THREE.PointsMaterial({
       color: 0xffffff,
       size: 0.7,
       sizeAttenuation: true,
@@ -253,16 +267,17 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
       opacity: 0.8,
       depthWrite: false,
     });
-    this.add(new THREE.Points(starGeo, starMat));
+    this.add(new THREE.Points(starGeometry, starMaterial));
 
+    // Fog is a soft horizon plane layered behind the terrain and sun.
     this.fogMaterial = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
       uniforms: {
         time: { value: 0 },
-        speed: { value: 0.0 },
-        baseOpacity: { value: 1.5 },
-        fogColor: { value: new THREE.Color(0.8, 0.8, 0.85) },
+        uFogNoiseSpeed: { value: 0.0 },
+        uFogOpacity: { value: 1.5 },
+        uFogTint: { value: new THREE.Color(0.8, 0.8, 0.85) },
       },
       vertexShader: `
 	varying vec2 vUv;
@@ -273,8 +288,8 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
       fragmentShader: `
 	precision mediump float;
 	varying vec2 vUv;
-	uniform float time, speed, baseOpacity;
-	uniform vec3 fogColor;
+	uniform float time, uFogNoiseSpeed, uFogOpacity;
+	uniform vec3 uFogTint;
 
 	float hash_2D(vec2 p){
 		return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);
@@ -293,17 +308,18 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
 	
 	float fbm(vec2 p){
 		float f = 0.0;
-		f += 0.5   * noise_2D(p*1.0 - time*speed);
-		f += 0.25  * noise_2D(p*2.0 - time*speed*1.3);
-		f += 0.125 * noise_2D(p*4.0 - time*speed*1.7);
+		// fbm layers several noise octaves into the soft fog bank.
+		f += 0.5   * noise_2D(p*1.0 - time*uFogNoiseSpeed);
+		f += 0.25  * noise_2D(p*2.0 - time*uFogNoiseSpeed*1.3);
+		f += 0.125 * noise_2D(p*4.0 - time*uFogNoiseSpeed*1.7);
 		return f;
 	}
 
 	void main(){
-		float c = fbm(vUv * vec2(1.5,1.0));
-		float yf = smoothstep(0.0,0.1,vUv.y) * (1.0 - smoothstep(0.8,1.0,vUv.y));
-		float alpha = c * yf * baseOpacity;
-		gl_FragColor = vec4(fogColor, alpha);
+		float fogNoise = fbm(vUv * vec2(1.5,1.0));
+		float horizonMask = smoothstep(0.0,0.1,vUv.y) * (1.0 - smoothstep(0.8,1.0,vUv.y));
+		float fogAlpha = fogNoise * horizonMask * uFogOpacity;
+		gl_FragColor = vec4(uFogTint, fogAlpha);
 	}`,
     });
     const fogMesh = new THREE.Mesh(
