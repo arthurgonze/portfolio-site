@@ -27,6 +27,8 @@ class OldTvNoiseTheme extends ShaderThemeBase {
   constructor(context) {
     super(context, themeMeta.id);
 
+    // Screen-space TV noise: the uniforms control scanline speed, grain amount,
+    // and the thickness of the moving noise line.
     this.noiseMaterial = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },

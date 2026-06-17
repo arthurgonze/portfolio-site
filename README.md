@@ -80,6 +80,17 @@ The renderer supports:
 6. Run `npm run generate`
 7. Test the theme selector and refresh persistence
 
+Theme files stay easier to read if they keep the same internal order:
+
+- imports
+- `themeMeta`
+- `createTheme`
+- shader constants or helper builders
+- the theme class
+- helper functions
+
+For larger shader themes, prefer section comments that describe the visual stage or pass instead of line-by-line commentary.
+
 Example:
 
 ```js

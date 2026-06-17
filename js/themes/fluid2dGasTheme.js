@@ -20,6 +20,8 @@ export function createTheme(context) {
   return new Fluid2dGasTheme(context);
 }
 
+// Each shader below maps to a single stage in the fluid pipeline:
+// advection, divergence, pressure solve, gradient subtraction, splat, display.
 const SHADERS = {
   vertex: {
     simple: `
@@ -131,6 +133,10 @@ const SHADERS = {
   },
 };
 
+/**
+ * Screen-space fluid solver that owns the velocity, density, pressure, and
+ * display passes for the theme.
+ */
 class Fluid2dGasTheme extends ShaderThemeBase {
   /**
    * @param {object} context
@@ -445,6 +451,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    * @private
    */
   addFluidSplat(x, y, dx, dy) {
+    // A fluid splat writes a paired impulse into velocity and density.
     const normalizedX = x / this.canvas.width;
     const normalizedY = 1.0 - y / this.canvas.height;
 
@@ -475,6 +482,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    */
   applyForces(time) {
     if (this.mouse.moved) {
+      // Dragging the mouse injects both momentum and color at the same point.
       const dx = (this.mouse.x - this.mouse.lastX) * 10.0;
       const dy = (this.mouse.y - this.mouse.lastY) * 10.0;
 
@@ -504,6 +512,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
     }
 
     if (Math.random() < this.config.ambientForce.frequency) {
+      // Random ambient splats keep the simulation alive when the pointer is idle.
       const x = this.canvas.width * Math.random();
       const y = this.canvas.height * Math.random();
       const strength =
@@ -529,9 +538,11 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    * @private
    */
   project() {
+    // Divergence is the source term for the pressure solve.
     this.divergenceUniforms.uVelocity.value = this.fields.velocity.read.texture;
     this.renderToTarget(this.fields.divergence, this.shaders.divergence);
 
+    // Jacobi iterations approximate the pressure field.
     this.renderer.setRenderTarget(this.fields.pressure.read);
     this.renderer.clear();
     this.renderer.setRenderTarget(this.fields.pressure.write);
@@ -545,6 +556,7 @@ class Fluid2dGasTheme extends ShaderThemeBase {
       this.fields.pressure.swap();
     }
 
+    // Subtract the pressure gradient to restore incompressible flow.
     this.gradientUniforms.uPressure.value = this.fields.pressure.read.texture;
     this.gradientUniforms.uVelocity.value = this.fields.velocity.read.texture;
     this.renderToTarget(this.fields.velocity.write, this.shaders.gradient);
@@ -582,10 +594,19 @@ class Fluid2dGasTheme extends ShaderThemeBase {
    */
   simulationStep(time, dt) {
     const frameDt = Math.min(dt, 0.016);
+    // User and ambient impulses feed the velocity and density fields first.
     this.applyForces(time);
+
+    // Carry velocity forward before the pressure solve so motion stays coherent.
     this.advect(this.fields.velocity, this.fields.velocity, frameDt, this.config.velocityDissipation);
+
+    // Solve the pressure field to remove divergence from the velocity field.
     this.project();
+
+    // Density follows the updated velocity field.
     this.updateDensity(frameDt);
+
+    // The display pass selects either the density or debug velocity view.
     this.updateDisplay(time);
   }
 

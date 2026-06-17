@@ -62,8 +62,12 @@ class DvdScreensaverTheme extends ShaderThemeBase {
       return;
     }
 
+    // Normalize motion so the bounce speed feels the same across frame rates.
     const frameScale = deltaTime > 0 ? deltaTime * 60 : 1;
-    this.sprite.position.addScaledVector(this.sprite.userData.velocity, frameScale);
+    this.sprite.position.addScaledVector(
+      this.sprite.userData.velocity,
+      frameScale,
+    );
 
     this._handleBounds();
   }
@@ -115,8 +119,12 @@ class DvdScreensaverTheme extends ShaderThemeBase {
     const camera = /** @type {THREE.OrthographicCamera} */ (this.camera);
     const visibleHeight = camera.top - camera.bottom;
     const visibleWidth = camera.right - camera.left;
-    const headerWorld = (headerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
-    const footerWorld = (footerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
+    // Convert shell chrome from pixels into world units so the logo stays clear
+    // of the header and footer while still using the shared orthographic rig.
+    const headerWorld =
+      (headerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
+    const footerWorld =
+      (footerPx / Math.max(this.viewport.height, 1)) * visibleHeight;
     const halfSpriteWidth = this.sprite.scale.x / 2;
     const halfSpriteHeight = this.sprite.scale.y / 2;
 

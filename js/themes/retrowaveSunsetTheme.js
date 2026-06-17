@@ -22,6 +22,8 @@ export function createTheme(context) {
 }
 
 // ---- Terrain shaders ----
+// The terrain is a deformed road plane; the fragment shader adds the grid and
+// distance fog that sell the retro perspective shot.
 const vertexShader = `
 	precision mediump float;
 
@@ -89,12 +91,15 @@ const fragmentShader = `
 		float g = drawGrid(coord, uGridLineWidth);
 		vec3 color = mix(uBaseColor, uGridColor, g);
 		vec4 base = vec4(color, 1.0);
-		float f = smoothstep(uFogStart, uFogEnd, vWorldPosition.z);
+		// More negative Z is farther away, so fog grows as the road recedes.
+		float f = 1.0 - smoothstep(uFogEnd, uFogStart, vWorldPosition.z);
 		vec3 finalCol = mix(base.rgb, uFogColor, f);
 		gl_FragColor = vec4(finalCol, 1.0);
 	}`;
 
 // ---- Sun shader ----
+// The sun is a separate decorative mesh so the stripes, glow, and disc mask can
+// be tuned independently from the terrain.
 function createRadialStripedSun() {
   const uniforms = {
     time: { value: 0 },
@@ -147,6 +152,7 @@ function createRadialStripedSun() {
 }
 
 // ---- Gradient sky ----
+// The sky is baked once into a canvas texture so the background stays cheap.
 function createGradientSky() {
   const canvas = document.createElement("canvas");
   canvas.width = 2;
@@ -228,6 +234,7 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
     sun.position.set(0, 20, -150);
     this.add(sun);
 
+    // The baked sky keeps the background readable without another shader pass.
     this.add(createGradientSky());
 
     const starGeo = new THREE.BufferGeometry();
@@ -235,6 +242,7 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
     const starsPos = new Float32Array(starCount * 3);
     const roadW = 1;
     const spreadX = 500;
+    // Keep stars out of the road corridor so the center line stays open.
     for (let i = 0; i < starCount; i++) {
       let x;
       do {
@@ -255,6 +263,7 @@ class RetrowaveSunsetTheme extends ShaderThemeBase {
     });
     this.add(new THREE.Points(starGeo, starMat));
 
+    // Fog is a soft horizon plane layered behind the terrain and sun.
     this.fogMaterial = new THREE.ShaderMaterial({
       transparent: true,
       depthWrite: false,
