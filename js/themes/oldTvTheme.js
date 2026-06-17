@@ -32,13 +32,13 @@ class OldTvNoiseTheme extends ShaderThemeBase {
     this.noiseMaterial = new THREE.ShaderMaterial({
       uniforms: {
         time: { value: 0 },
-        u_resolution: {
+        uResolution: {
           value: new THREE.Vector2(context.viewport.width, context.viewport.height),
         },
-        u_scan_speed: { value: 0.25 },
-        u_bg_noise_amount: { value: 0.2 },
-        u_line_noise_amount: { value: 0.5 },
-        u_line_thickness: { value: 0.001 },
+        uScanSpeed: { value: 0.25 },
+        uBackgroundNoiseAmount: { value: 0.2 },
+        uLineNoiseAmount: { value: 0.5 },
+        uLineThickness: { value: 0.001 },
       },
       vertexShader: `
 	varying vec2 vUv;
@@ -48,10 +48,10 @@ class OldTvNoiseTheme extends ShaderThemeBase {
 	}`,
       fragmentShader: `
 	uniform float time;
-	uniform float u_scan_speed;
-	uniform float u_bg_noise_amount;
-	uniform float u_line_noise_amount;
-	uniform float u_line_thickness;
+	uniform float uScanSpeed;
+	uniform float uBackgroundNoiseAmount;
+	uniform float uLineNoiseAmount;
+	uniform float uLineThickness;
 	varying vec2 vUv;
 
 	float random(vec2 st) {
@@ -59,14 +59,17 @@ class OldTvNoiseTheme extends ShaderThemeBase {
 	}
 
 	void main() {
-		float bgNoiseVal = pow(random(vUv * 80.0 + floor(time * 5.0)), 10.0) * u_bg_noise_amount;
-		float lineY = fract(time * u_scan_speed);
-		float lineIntensity = smoothstep(lineY - u_line_thickness, lineY, vUv.y) - smoothstep(lineY, lineY + u_line_thickness, vUv.y);
-		float lineNoiseFactor = random(vec2(vUv.x * 15.0, floor(time * 15.0)));
-		float noisyLineVal = lineIntensity * ((1.0 - u_line_noise_amount) + lineNoiseFactor * u_line_noise_amount);
+		// Shape the grain so isolated pixels read like old CRT noise.
+		float backgroundGrain = pow(random(vUv * 80.0 + floor(time * 5.0)), 10.0) * uBackgroundNoiseAmount;
+		// The phase loops with fract so the scanline wraps back to the top.
+		float scanlinePhase = fract(time * uScanSpeed);
+		// The paired smoothstep calls form the soft moving scanline band.
+		float scanlineBand = smoothstep(scanlinePhase - uLineThickness, scanlinePhase, vUv.y) - smoothstep(scanlinePhase, scanlinePhase + uLineThickness, vUv.y);
+		float scanlineNoise = random(vec2(vUv.x * 15.0, floor(time * 15.0)));
+		float scanlineValue = scanlineBand * ((1.0 - uLineNoiseAmount) + scanlineNoise * uLineNoiseAmount);
 
-		float gray = clamp(0.05 + bgNoiseVal + noisyLineVal, 0.0, 1.0);
-		gl_FragColor = vec4(vec3(gray), 1.0);
+		float grayLevel = clamp(0.05 + backgroundGrain + scanlineValue, 0.0, 1.0);
+		gl_FragColor = vec4(vec3(grayLevel), 1.0);
 	}`,
       depthTest: false,
       depthWrite: false,
@@ -84,7 +87,7 @@ class OldTvNoiseTheme extends ShaderThemeBase {
    */
   update(time, _deltaTime) {
     this.noiseMaterial.uniforms.time.value = time;
-    this.noiseMaterial.uniforms.u_resolution.value.set(
+    this.noiseMaterial.uniforms.uResolution.value.set(
       this.viewport.width,
       this.viewport.height,
     );
@@ -95,7 +98,7 @@ class OldTvNoiseTheme extends ShaderThemeBase {
    */
   resize(viewport) {
     super.resize(viewport);
-    this.noiseMaterial.uniforms.u_resolution.value.set(
+    this.noiseMaterial.uniforms.uResolution.value.set(
       viewport.width,
       viewport.height,
     );
